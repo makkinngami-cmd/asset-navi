@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>アセットナビ - 資産配分シミュレーター</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-2: #eef3f5;
+      --ink: #172026;
+      --muted: #66737d;
+      --line: #d8e0e4;
+      --blue: #2364aa;
+      --green: #0b8f6a;
+      --amber: #b46b1d;
+      --red: #bd3b3b;
+      --violet: #6f5aa8;
+      --shadow: 0 14px 34px rgba(24, 32, 38, 0.08);
+      font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); overflow-x: hidden; }
+    button, input, select { font: inherit; }
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 252px minmax(0, 1fr);
+      max-width: 100vw;
+    }
+    .sidebar {
+      background: #162329;
+      color: #f8fbfc;
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 760; font-size: 18px; }
+    .mark {
+      width: 34px; height: 34px;
+      display: grid; place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #46a3a3, #e3a34d);
+      color: #122025; font-weight: 900;
+    }
+    .nav { display: grid; gap: 6px; }
+    .nav button {
+      border: 0; background: transparent; color: #bac8cf;
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 10px 11px; border-radius: 8px;
+      cursor: pointer; text-align: left;
+    }
+    .nav button.active { background: rgba(255,255,255,0.1); color: #ffffff; }
+    .nav svg { width: 18px; height: 18px; flex: 0 0 auto; }
+    .sidebar-note {
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding-top: 16px;
+      color: #aebdc4; font-size: 13px; line-height: 1.55;
+    }
+    main { min-width: 0; padding: 22px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; margin-bottom: 18px;
+    }
+    h1 { font-size: 24px; line-height: 1.2; margin: 0 0 5px; }
+    .subtitle { margin: 0; color: var(--muted); font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.8fr);
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+    .panel-head {
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .panel h2 { margin: 0; font-size: 15px; }
+    .panel-body { padding: 16px; }
+    .chart-wrap { position: relative; min-height: 390px; }
+    canvas { width: 100%; height: 390px; display: block; }
+    .legend {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      font-size: 12px; color: var(--muted); padding-top: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+    .controls { display: grid; gap: 16px; }
+    .control-row { display: grid; gap: 6px; }
+    .control-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    label { font-size: 13px; color: #35444b; font-weight: 650; }
+    .value { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+    input[type="range"] { width: 100%; accent-color: var(--green); }
+    input[type="number"] {
+      width: 100%; padding: 7px 10px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: #fbfcfc; font-size: 14px;
+    }
+    .preset-buttons { display: flex; gap: 6px; margin-top: 4px; }
+    .preset-btn {
+      flex: 1; border: 1px solid var(--line); background: #fbfcfc;
+      color: #35444b; border-radius: 8px; padding: 9px 12px;
+      cursor: pointer; font-size: 14px; font-weight: 650;
+      transition: background 120ms, border-color 120ms, color 120ms;
+    }
+    .preset-btn.active { background: #162329; border-color: #162329; color: #ffffff; }
+    .preset-btn:hover:not(.active) { background: var(--panel-2); }
+    .btc-hint {
+      font-size: 12px; color: #bd3b3b; margin-top: 2px;
+      background: #fff0f0; padding: 6px 8px; border-radius: 6px;
+      display: none;
+    }
+    .asset-universe {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .asset-toggle {
+      display: flex; align-items: center; gap: 7px;
+      min-height: 32px; padding: 6px 9px;
+      border: 1px solid var(--line); border-radius: 8px;
+      background: #fbfcfc; color: #35444b;
+      font-size: 13px; font-weight: 650; cursor: pointer;
+    }
+    .asset-toggle input { accent-color: var(--green); width: 14px; height: 14px; flex: 0 0 auto; cursor: pointer; }
+    .asset-toggle i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+    .asset-count { font-size: 12px; color: var(--muted); }
+    .mini-metrics {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-top: 14px; padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 12px; color: var(--muted);
+    }
+    .mini-metrics strong { font-size: 13px; color: var(--ink); margin-left: 4px; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      border: 1px solid var(--line); border-radius: 8px;
+      padding: 11px; background: #fbfcfc;
+    }
+    .metric span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+    .metric strong { font-size: 18px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .metric.primary strong { font-size: 22px; }
+    .metric.danger strong { color: var(--red); }
+    .allocations { display: grid; gap: 10px; }
+    .asset {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr) 44px;
+      align-items: center; gap: 9px; font-size: 13px;
+    }
+    .bar { height: 9px; background: #e8eef0; border-radius: 999px; overflow: hidden; }
+    .bar > i { display: block; height: 100%; width: 0; background: var(--blue); border-radius: 999px; transition: width 220ms ease; }
+    .asset b { font-variant-numeric: tabular-nums; text-align: right; font-weight: 700; }
+    .insight {
+      margin-top: 14px; padding: 13px;
+      border-left: 4px solid var(--green);
+      background: #eef8f4; color: #27423a;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px; line-height: 1.55;
+    }
+    .lower {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px; margin-top: 16px;
+    }
+    .disclaimer {
+      margin-top: 16px; font-size: 11px; color: var(--muted);
+      line-height: 1.6; padding: 12px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { min-height: auto; }
+      .nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sidebar-note { margin-top: 0; }
+      .grid, .lower { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 680px) {
+      main { padding: 14px; }
+      h1 { font-size: 22px; }
+      .chart-wrap { min-height: 300px; }
+      canvas { height: 300px; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark">A</div>
+        <div>アセットナビ</div>
+      </div>
+      <nav class="nav">
+        <button class="active" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-7"/></svg>
+          シミュレーター
+        </button>
+        <button type="button" onclick="location.href='btc_powerlaw.html'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9h4.5a1.5 1.5 0 0 1 0 3H9v3h4.5a1.5 1.5 0 0 1 0 3"/><path d="M10 7v2m0 6v2m4-10v2m0 6v2"/></svg>
+          BTCパワーロー
+        </button>
+      </nav>
+      <div class="sidebar-note">
+        伝統資産とBTCを同じリスク地図で比べる配分設計ツール。<br>
+        売買代行ではなく、あなた自身の判断を支援します。
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <h1>資産配分シミュレーター</h1>
+          <p class="subtitle">タイプとBTC比率を選ぶだけで、リターン・リスク・将来の範囲を試算します。</p>
+        </div>
+      </div>
+
+      <section class="grid">
+        <!-- Left: Frontier Chart -->
+        <div class="panel">
+          <div class="panel-head">
+            <h2>効率的フロンティア（参考）</h2>
+          </div>
+          <div class="panel-body">
+            <div class="chart-wrap">
+              <canvas id="frontier" width="900" height="430" aria-label="Efficient frontier chart"></canvas>
+            </div>
+            <div class="legend">
+              <span><i class="dot" style="background:#2364aa"></i>フロンティア（近似）</span>
+              <span><i class="dot" style="background:#75838a"></i>単体資産</span>
+              <span><i class="dot" style="background:#0b8f6a"></i>選択ポートフォリオ</span>
+              <span><i class="dot" style="background:#bd3b3b"></i>BTC（期間別リターン）</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Controls -->
+        <div class="panel">
+          <div class="panel-head">
+            <h2>設計パラメータ</h2>
+          </div>
+          <div class="panel-body">
+            <div class="controls">
+              <div class="control-row">
+                <label>投資タイプ</label>
+                <div class="preset-buttons">
+                  <button class="preset-btn" data-preset="conservative" type="button">保守</button>
+                  <button class="preset-btn active" data-preset="balanced" type="button">標準</button>
+                  <button class="preset-btn" data-preset="growth" type="button">積極</button>
+                </div>
+              </div>
+              <div class="control-row">
+                <div class="control-meta">
+                  <label for="btcSlider">BTC比率</label>
+                  <span class="value" id="btcValue">0%</span>
+                </div>
+                <input id="btcSlider" type="range" min="0" max="30" value="0" step="1" />
+                <div class="btc-hint" id="btcHint"></div>
+              </div>
+              <div class="control-row">
+                <div class="control-meta">
+                  <label for="horizonSlider">投資期間</label>
+                  <span class="value" id="horizonValue">10年</span>
+                </div>
+                <input id="horizonSlider" type="range" min="1" max="15" value="10" step="1" />
+              </div>
+              <div class="control-row">
+                <div class="control-meta">
+                  <label>使うアセット</label>
+                  <span class="value asset-count" id="enabledCount"></span>
+                </div>
+                <div class="asset-universe" id="assetUniverse"></div>
+              </div>
+              <div class="control-row">
+                <div class="control-meta">
+                  <label for="initialAmount">初期投資額（万円）</label>
+                </div>
+                <input id="initialAmount" type="number" min="10" max="100000" value="100" step="10" />
+              </div>
+            </div>
+            <div class="mini-metrics">
+              <span>期待リターン<strong id="returnVal">--%</strong></span>
+              <span>リスク<strong id="riskVal">--%</strong></span>
+              <span>Sharpe<strong id="sharpeVal">--</strong></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="lower">
+        <div class="panel">
+          <div class="panel-head">
+            <h2 id="resultsTitle">10年後のシミュレーション（初期投資100万円）</h2>
+          </div>
+          <div class="panel-body">
+            <div class="metrics">
+              <div class="metric primary">
+                <span>中央値</span>
+                <strong id="medianVal">--</strong>
+              </div>
+              <div class="metric">
+                <span>上振れ（上位10%）</span>
+                <strong id="highVal">--</strong>
+              </div>
+              <div class="metric">
+                <span>下振れ（下位10%）</span>
+                <strong id="lowVal">--</strong>
+              </div>
+            </div>
+            <div class="metrics" style="margin-top:10px">
+              <div class="metric danger" style="grid-column:1/4">
+                <span>最大下落の目安（想定：最悪の1年）</span>
+                <strong id="drawdownVal">--%</strong>
+              </div>
+            </div>
+            <div class="insight" id="insight">タイプとBTC比率を選んでください。</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>推奨配分</h2>
+          </div>
+          <div class="panel-body">
+            <div class="allocations" id="allocations"></div>
+          </div>
+        </div>
+      </section>
+
+      <p class="disclaimer">
+        免責事項：本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。
+        試算値は対数正規分布の簡易近似（手数料・税金・為替・インフレ未考慮）です。
+        BTCのリターン予測はパワーローモデルに基づく推計であり、実際の価格は大きく乖離することがあります。
+      </p>
+    </main>
+  </div>
+
+  <script src="btc_powerlaw_data.js"></script>
+  <script>
+    // ── Real data from main.py (asset_navi_results.json) ──────────────────
+
+    // Covariance matrix
+    // Asset order: ['global_equity', 'us_bond', 'gold', 'reit', 'btc', 'cash']
+    const COV = [
+      [ 0.031085,  0.001703,  0.001397,  0.025931,  0.026940, -0.0000008],
+      [ 0.001703,  0.004219,  0.000487,  0.002940,  0.002337,  0.0000027],
+      [ 0.001397,  0.000487,  0.022249,  0.004295,  0.008799, -0.0000062],
+      [ 0.025931,  0.002940,  0.004295,  0.050851,  0.022760, -0.0000005],
+      [ 0.026940,  0.002337,  0.008799,  0.022760,  0.259591,  0.0000291],
+      [-0.0000008, 0.0000027,-0.0000062,-0.0000005, 0.0000291,  0.000128 ]
+    ];
+
+    const BTC_IDX = 4;
+
+    // BTC volatility: use wave_residual (deviation from wave model) if available,
+    // otherwise fall back to last_3y realized vol. wave_residual is the correct
+    // risk measure when the wave model is used as the expected return.
+    function getBtcVol() {
+      try {
+        const wv = BTC_DATA.realized_volatility.wave_residual;
+        if (typeof wv === 'number' && !isNaN(wv) && wv > 0) return wv;
+      } catch (e) {}
+      try {
+        const v3y = BTC_DATA.realized_volatility.last_3y;
+        if (typeof v3y === 'number') return v3y;
+      } catch (e) {}
+      return 0.47; // hardcoded fallback
+    }
+
+    // BTC variance (computed once at load, updated in computePortfolio)
+    let BTC_VOL = getBtcVol();
+    let BTC_VAR = BTC_VOL * BTC_VOL;
+
+    // Static expected returns; BTC is overridden dynamically from BTC_DATA
+    const BASE_RETURNS = {
+      global_equity: 0.05,
+      us_bond:       0.015,
+      gold:          0.02,
+      reit:          0.04,
+      btc:           0.25,  // placeholder
+      cash:          0.001
+    };
+
+    const ASSET_KEYS = ['global_equity', 'us_bond', 'gold', 'reit', 'btc', 'cash'];
+
+    // Preset base weights (btc=0 in base; added via slider)
+    const PRESETS = {
+      conservative: {
+        label: '保守',
+        desc: '債券・現金中心。値動きが小さく安定重視。',
+        weights: { global_equity: 0.20, us_bond: 0.45, gold: 0.10, reit: 0.05, btc: 0.0, cash: 0.20 }
+      },
+      balanced: {
+        label: '標準',
+        desc: '株式と債券をバランスよく組み合わせた標準的な構成。',
+        weights: { global_equity: 0.45, us_bond: 0.25, gold: 0.10, reit: 0.10, btc: 0.0, cash: 0.10 }
+      },
+      growth: {
+        label: '積極',
+        desc: '株式中心。高リターン狙いで、値動きも大きい。',
+        weights: { global_equity: 0.60, us_bond: 0.10, gold: 0.08, reit: 0.12, btc: 0.0, cash: 0.10 }
+      }
+    };
+
+    // Asset chart info (risk = sqrt(COV[i][i]), in %)
+    const ASSET_INFO = [
+      { key: 'global_equity', label: '全世界株', color: '#2364aa', risk: 17.63, baseRet: 5.0  },
+      { key: 'us_bond',       label: '米国債券', color: '#0b8f6a', risk:  6.50, baseRet: 1.5  },
+      { key: 'gold',          label: '金',       color: '#b46b1d', risk: 14.92, baseRet: 2.0  },
+      { key: 'reit',          label: 'REIT',     color: '#6f5aa8', risk: 22.55, baseRet: 4.0  },
+      { key: 'btc',           label: 'BTC',      color: '#bd3b3b', risk: 47.0,  baseRet: 25.0 },
+      { key: 'cash',          label: '現金',     color: '#75838a', risk:  1.13, baseRet: 0.1  }
+    ];
+
+    // ── App state ──────────────────────────────────────────────────────────
+    const state = {
+      preset: 'balanced',
+      btcPct: 0,
+      horizon: 10,
+      initialAmount: 100,   // 万円
+      enabled: { global_equity: true, us_bond: true, gold: true, reit: true, cash: true }
+    };
+
+    // ── Core computation ───────────────────────────────────────────────────
+    function getBtcReturn(horizon) {
+      try {
+        const r = BTC_DATA.wave_projection.annual_by_horizon[String(horizon)];
+        if (typeof r === 'number') return r;
+      } catch (e) {}
+      return 0.25; // fallback
+    }
+
+    function computePortfolio() {
+      const btcReturn = getBtcReturn(state.horizon);
+
+      // Adjust covariance: override BTC variance to 47%²
+      const cov = COV.map(row => [...row]);
+      cov[BTC_IDX][BTC_IDX] = BTC_VAR;
+
+      // Weights: apply enabled filter, add BTC, renormalize
+      const btcFrac = state.btcPct / 100;
+      const baseW   = PRESETS[state.preset].weights;
+      // Sum of enabled non-BTC base weights
+      let baseSum = 0;
+      ASSET_KEYS.forEach(k => { if (k !== 'btc' && state.enabled[k]) baseSum += (baseW[k] || 0); });
+      const scale = baseSum > 0 ? (1 - btcFrac) / baseSum : 0;
+      const w = {};
+      ASSET_KEYS.forEach(k => {
+        if (k === 'btc') w[k] = btcFrac;
+        else w[k] = state.enabled[k] ? (baseW[k] || 0) * scale : 0;
+      });
+
+      // Expected returns with dynamic BTC
+      const rets = { ...BASE_RETURNS, btc: btcReturn };
+
+      // Portfolio return (arithmetic)
+      let pRet = 0;
+      ASSET_KEYS.forEach(k => { pRet += w[k] * rets[k]; });
+
+      // Portfolio variance = w' * Cov * w
+      const wArr = ASSET_KEYS.map(k => w[k]);
+      let pVar = 0;
+      for (let i = 0; i < 6; i++)
+        for (let j = 0; j < 6; j++)
+          pVar += wArr[i] * wArr[j] * cov[i][j];
+      const pVol = Math.sqrt(Math.max(0, pVar));
+
+      // T-year lognormal range
+      // Median  = initial × exp(T × (r − 0.5σ²))
+      // P90/P10 = initial × exp(T×r ± 1.645×√T×σ)
+      const T       = state.horizon;
+      const mu      = pRet - 0.5 * pVol * pVol;
+      const initial = state.initialAmount * 10000;
+      const median  = initial * Math.exp(T * mu);
+      const high    = initial * Math.exp(T * pRet + 1.645 * Math.sqrt(T) * pVol);
+      const low     = initial * Math.exp(T * pRet - 1.645 * Math.sqrt(T) * pVol);
+
+      // Max drawdown estimate: ~2.2× annual vol (calibrated to reference portfolios)
+      const drawdown = -2.2 * pVol;
+
+      // Sharpe (risk-free 0.1%)
+      const sharpe = pVol > 0 ? (pRet - 0.001) / pVol : 0;
+
+      return { w, pRet, pVol, sharpe, median, high, low, drawdown, btcReturn };
+    }
+
+    function fmt万円(yen) {
+      const man = Math.round(yen / 10000);
+      if (man >= 10000) return (man / 10000).toFixed(1) + '億円';
+      return man.toLocaleString() + '万円';
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
+    function render() {
+      const result = computePortfolio();
+
+      // Controls display
+      document.getElementById('btcValue').textContent    = state.btcPct + '%';
+      document.getElementById('horizonValue').textContent = state.horizon + '年';
+
+      const btcHint = document.getElementById('btcHint');
+      if (state.btcPct > 0) {
+        btcHint.textContent = `パワーローモデル（${state.horizon}年）：BTC期待リターン ${(result.btcReturn * 100).toFixed(1)}%`;
+        btcHint.style.display = 'block';
+      } else {
+        btcHint.style.display = 'none';
+      }
+
+      // Mini metrics
+      document.getElementById('returnVal').textContent = (result.pRet * 100).toFixed(1) + '%';
+      document.getElementById('riskVal').textContent   = (result.pVol * 100).toFixed(1) + '%';
+      document.getElementById('sharpeVal').textContent = result.sharpe.toFixed(2);
+
+      // Results header
+      document.getElementById('resultsTitle').textContent =
+        `${state.horizon}年後のシミュレーション（初期投資 ${state.initialAmount.toLocaleString()}万円）`;
+
+      // Key numbers
+      document.getElementById('medianVal').textContent   = fmt万円(result.median);
+      document.getElementById('highVal').textContent     = fmt万円(result.high);
+      document.getElementById('lowVal').textContent      = fmt万円(result.low);
+      document.getElementById('drawdownVal').textContent = (result.drawdown * 100).toFixed(0) + '%';
+
+      // Insight
+      const p = PRESETS[state.preset];
+      let msg = `${p.label}（${p.desc}）`;
+      if (state.btcPct > 0) msg += ` BTC ${state.btcPct}%追加。`;
+      msg += ` 期待リターン ${(result.pRet * 100).toFixed(1)}%、リスク ${(result.pVol * 100).toFixed(1)}%。`;
+      msg += ` ${state.horizon}年後の中央値は ${fmt万円(result.median)}（下振れ ${fmt万円(result.low)} 〜 上振れ ${fmt万円(result.high)}）。`;
+      document.getElementById('insight').textContent = msg;
+
+      // Enabled count
+      const nonBtcAssets = ASSET_INFO.filter(a => a.key !== 'btc');
+      const enabledCount = nonBtcAssets.filter(a => state.enabled[a.key]).length;
+      document.getElementById('enabledCount').textContent =
+        `${enabledCount + (state.btcPct > 0 ? 1 : 0)} / ${nonBtcAssets.length + 1}`;
+
+      // Allocations
+      renderAllocations(result.w);
+
+      // Asset universe checkboxes (only on first render; after that driven by events)
+      if (!document.getElementById('assetUniverse').hasChildNodes()) renderAssetUniverse();
+
+      // Chart
+      drawChart(result);
+    }
+
+    function renderAssetUniverse() {
+      const root = document.getElementById('assetUniverse');
+      root.innerHTML = '';
+      ASSET_INFO.filter(a => a.key !== 'btc').forEach(a => {
+        const lbl = document.createElement('label');
+        lbl.className = 'asset-toggle';
+        lbl.innerHTML = `
+          <input type="checkbox" data-asset="${a.key}" ${state.enabled[a.key] ? 'checked' : ''} />
+          <i style="background:${a.color}"></i>
+          <span>${a.label}</span>`;
+        root.appendChild(lbl);
+      });
+    }
+
+    function renderAllocations(w) {
+      const root = document.getElementById('allocations');
+      root.innerHTML = '';
+      ASSET_INFO.forEach(a => {
+        const pct = Math.round((w[a.key] || 0) * 100);
+        if (pct === 0) return;
+        const row = document.createElement('div');
+        row.className = 'asset';
+        row.innerHTML = `
+          <span>${a.label}</span>
+          <div class="bar"><i style="width:${pct}%;background:${a.color}"></i></div>
+          <b>${pct}%</b>`;
+        root.appendChild(row);
+      });
+    }
+
+    // ── Canvas chart ───────────────────────────────────────────────────────
+    const canvas = document.getElementById('frontier');
+    const ctx    = canvas.getContext('2d');
+    const AREA   = { left: 82, right: 48, top: 30, bottom: 64 };
+
+    // Compute axis scale dynamically based on content
+    function getAxis(btcRet100) {
+      const maxRisk = state.btcPct > 0 ? 52 : 28;
+      const maxRet  = state.btcPct > 0 ? Math.max(30, Math.ceil(btcRet100 / 6) * 6) : 10;
+      return { riskMax: maxRisk, returnMax: maxRet };
+    }
+
+    function makeSx(axis) {
+      return r => AREA.left + (r / axis.riskMax) * (canvas.width - AREA.left - AREA.right);
+    }
+    function makeSy(axis) {
+      return r => canvas.height - AREA.bottom - (r / axis.returnMax) * (canvas.height - AREA.top - AREA.bottom);
+    }
+
+    // Portfolio stats for arbitrary weights (used for frontier generation)
+    function portfolioStats(w) {
+      const btcRet = getBtcReturn(state.horizon);
+      const cov = COV.map(row => [...row]);
+      cov[BTC_IDX][BTC_IDX] = BTC_VAR;
+      const rets = { ...BASE_RETURNS, btc: btcRet };
+      let pRet = 0;
+      ASSET_KEYS.forEach(k => { pRet += w[k] * rets[k]; });
+      const wArr = ASSET_KEYS.map(k => w[k]);
+      let pVar = 0;
+      for (let i = 0; i < 6; i++)
+        for (let j = 0; j < 6; j++)
+          pVar += wArr[i] * wArr[j] * cov[i][j];
+      return { pRet, pVol: Math.sqrt(Math.max(0, pVar)) };
+    }
+
+    // Build frontier by sweeping aggressiveness + BTC allocation
+    function computeFrontierSeries() {
+      const pts = [];
+
+      function blendPresets(t) {
+        // t: 0 = conservative, 0.5 = balanced, 1 = growth
+        const a = t <= 0.5
+          ? { from: PRESETS.conservative.weights, to: PRESETS.balanced.weights, s: t * 2 }
+          : { from: PRESETS.balanced.weights,     to: PRESETS.growth.weights,   s: (t - 0.5) * 2 };
+        const w = {};
+        ASSET_KEYS.forEach(k => { w[k] = a.from[k] * (1 - a.s) + a.to[k] * a.s; });
+        return w;
+      }
+
+      function applyEnabledAndBtc(baseW, btcFrac) {
+        let baseSum = 0;
+        ASSET_KEYS.forEach(k => { if (k !== 'btc' && state.enabled[k]) baseSum += (baseW[k] || 0); });
+        const scale = baseSum > 0 ? (1 - btcFrac) / baseSum : 0;
+        const w = {};
+        ASSET_KEYS.forEach(k => {
+          if (k === 'btc') w[k] = btcFrac;
+          else w[k] = state.enabled[k] ? (baseW[k] || 0) * scale : 0;
+        });
+        return w;
+      }
+
+      // Sweep without BTC (aggressiveness 0→1)
+      const steps = 24;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const baseW = blendPresets(t);
+        const w = applyEnabledAndBtc(baseW, 0);
+        const s = portfolioStats(w);
+        pts.push({ risk: s.pVol * 100, ret: s.pRet * 100 });
+      }
+
+      // Sweep with BTC (varying btcFrac from 0 to maxBtc)
+      const maxBtc = Math.max(state.btcPct / 100, 0.3);
+      for (let bi = 1; bi <= 12; bi++) {
+        const btcFrac = (bi / 12) * maxBtc;
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const baseW = blendPresets(t);
+          const w = applyEnabledAndBtc(baseW, btcFrac);
+          const s = portfolioStats(w);
+          pts.push({ risk: s.pVol * 100, ret: s.pRet * 100 });
+        }
+      }
+
+      // Sort by risk ascending
+      pts.sort((a, b) => a.risk - b.risk);
+
+      // Upper envelope: keep only Pareto-optimal points (max return at each risk)
+      const envelope = [];
+      let maxRet = -Infinity;
+      for (const pt of pts) {
+        if (pt.ret > maxRet) {
+          maxRet = pt.ret;
+          envelope.push(pt);
+        }
+      }
+
+      return envelope;
+    }
+
+    // Draw Catmull-Rom spline through screen points
+    function drawSpline(screenPts) {
+      if (screenPts.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(screenPts[0].x, screenPts[0].y);
+      for (let i = 0; i < screenPts.length - 1; i++) {
+        const p0 = screenPts[Math.max(0, i - 1)];
+        const p1 = screenPts[i];
+        const p2 = screenPts[i + 1];
+        const p3 = screenPts[Math.min(screenPts.length - 1, i + 2)];
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+      }
+      ctx.stroke();
+    }
+
+    function drawChart(result) {
+      const btcRet100 = result.btcReturn * 100;
+      const axis = getAxis(btcRet100);
+      const sx = makeSx(axis);
+      const sy = makeSy(axis);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Grid
+      ctx.strokeStyle = '#d8e0e4';
+      ctx.lineWidth = 1;
+      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.fillStyle = '#66737d';
+
+      for (let i = 0; i <= 5; i++) {
+        const xv = (axis.riskMax / 5) * i;
+        const px = sx(xv);
+        ctx.beginPath(); ctx.moveTo(px, AREA.top); ctx.lineTo(px, canvas.height - AREA.bottom); ctx.stroke();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(Math.round(xv) + '%', px, canvas.height - AREA.bottom + 12);
+      }
+      for (let i = 0; i <= 5; i++) {
+        const yv = (axis.returnMax / 5) * i;
+        const py = sy(yv);
+        ctx.beginPath(); ctx.moveTo(AREA.left, py); ctx.lineTo(canvas.width - AREA.right, py); ctx.stroke();
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(yv.toFixed(0) + '%', AREA.left - 10, py);
+      }
+
+      // Axis labels
+      ctx.fillStyle = '#35444b';
+      ctx.font = '700 12px Segoe UI, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText('リスク（標準偏差）', AREA.left + (canvas.width - AREA.left - AREA.right) / 2, canvas.height - 6);
+      ctx.save();
+      ctx.translate(16, AREA.top + (canvas.height - AREA.top - AREA.bottom) / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('期待リターン', 0, 0);
+      ctx.restore();
+
+      // Frontier curve (smooth spline through real portfolio points)
+      const frontierPts = computeFrontierSeries();
+      const screenFrontier = frontierPts.map(p => ({ x: sx(p.risk), y: sy(p.ret) }));
+      ctx.strokeStyle = '#2364aa';
+      ctx.lineWidth = 3.5;
+      drawSpline(screenFrontier);
+
+      // Individual asset dots (hide disabled, hide BTC if btcPct=0)
+      ASSET_INFO.forEach(a => {
+        if (a.key === 'btc' && state.btcPct === 0) return;
+        if (a.key !== 'btc' && !state.enabled[a.key]) return;
+        const ret = a.key === 'btc' ? btcRet100 : a.baseRet;
+        const px  = sx(a.risk), py = sy(ret);
+        ctx.fillStyle   = '#ffffff';
+        ctx.strokeStyle = a.color;
+        ctx.lineWidth   = a.key === 'btc' ? 2.5 : 1.8;
+        ctx.beginPath();
+        ctx.arc(px, py, a.key === 'btc' ? 7 : 5, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        // Label (clamp to chart area)
+        ctx.fillStyle = a.key === 'btc' ? a.color : '#4d5a61';
+        ctx.font      = a.key === 'btc' ? '700 12px Segoe UI, sans-serif' : '12px Segoe UI, sans-serif';
+        const lx = Math.min(px + 10, canvas.width - AREA.right - 50);
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(a.label, lx, py);
+      });
+
+      // Selected portfolio crosshair
+      const portRisk = result.pVol * 100;
+      const portRet  = result.pRet * 100;
+      const px = sx(portRisk), py = sy(portRet);
+      ctx.strokeStyle = 'rgba(11,143,106,0.3)';
+      ctx.lineWidth   = 1;
+      ctx.setLineDash([4, 5]);
+      ctx.beginPath();
+      ctx.moveTo(px, AREA.top); ctx.lineTo(px, canvas.height - AREA.bottom);
+      ctx.moveTo(AREA.left, py); ctx.lineTo(canvas.width - AREA.right, py);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Selected portfolio point
+      ctx.fillStyle   = '#0b8f6a';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth   = 2;
+      ctx.beginPath();
+      ctx.arc(px, py, 9, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+
+      // Label (place left if near right edge)
+      const lbl = `${PRESETS[state.preset].label}${state.btcPct > 0 ? '+BTC' : ''}  ${portRet.toFixed(1)}% / ${portRisk.toFixed(1)}%`;
+      ctx.fillStyle = '#0b8f6a';
+      ctx.font      = '700 12px Segoe UI, sans-serif';
+      const lblW = ctx.measureText(lbl).width;
+      const lblX = px + 12 + lblW > canvas.width - AREA.right ? px - 12 - lblW : px + 12;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(lbl, lblX, py - 4);
+    }
+
+    // ── Event listeners ────────────────────────────────────────────────────
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.preset = btn.dataset.preset;
+        render();
+      });
+    });
+
+    document.getElementById('btcSlider').addEventListener('input', e => {
+      state.btcPct = Number(e.target.value);
+      render();
+    });
+
+    document.getElementById('horizonSlider').addEventListener('input', e => {
+      state.horizon = Number(e.target.value);
+      render();
+    });
+
+    document.getElementById('initialAmount').addEventListener('input', e => {
+      const v = Number(e.target.value);
+      if (v > 0) { state.initialAmount = v; render(); }
+    });
+
+    document.getElementById('assetUniverse').addEventListener('change', e => {
+      const key = e.target?.dataset?.asset;
+      if (!key) return;
+      // Prevent unchecking the last enabled asset
+      const willEnable = e.target.checked;
+      if (!willEnable) {
+        const enabledCount = Object.values(state.enabled).filter(Boolean).length;
+        if (enabledCount <= 1) { e.target.checked = true; return; }
+      }
+      state.enabled[key] = willEnable;
+      render();
+    });
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    renderAssetUniverse();
+    render();
+  </script>
+</body>
+</html>

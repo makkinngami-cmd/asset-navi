@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BTC パワーロー予測 — アセットナビ</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --panel: #ffffff; --ink: #172026; --muted: #66737d;
+      --line: #d8e0e4; --btc: #f7931a; --blue: #2364aa; --red: #bd3b3b; --green: #0b8f6a;
+      font-family: "Segoe UI", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+    h1 { font-size: 26px; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 22px; line-height: 1.6; }
+    a.back { color: var(--blue); font-size: 13px; text-decoration: none; }
+
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(24,32,38,.06); margin-bottom: 16px; }
+    .panel-head { padding: 12px 16px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); background: #fafbfc; }
+    .panel-body { padding: 16px; }
+    img { display: block; width: 100%; height: auto; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 760px) { .metrics { grid-template-columns: 1fr 1fr; } }
+    .metric { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfc; }
+    .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .metric-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .metric-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .btc { color: var(--btc); }
+    .red { color: var(--red); }
+    .green { color: var(--green); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; }
+    .bar-cell { position: relative; }
+    .ret-bar { display: inline-block; height: 8px; background: var(--btc); border-radius: 4px; vertical-align: middle; margin-left: 8px; }
+
+    .notice { border-left: 4px solid var(--line); padding: 10px 12px; color: var(--muted); font-size: 12px; line-height: 1.7; border-radius: 0 6px 6px 0; background: #f9fafb; }
+    .warn { border-left-color: var(--btc); background: #fff6ea; color: #6e4a12; }
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">← アセットナビに戻る</a>
+  <h1 style="margin-top:8px">BTC パワーロー予測</h1>
+  <p class="subtitle">過去価格を両対数で直線当てはめし、将来の年率リターン（逓減）と標準偏差の<strong>参考値</strong>を出します。アセットナビのBTC前提に使います。</p>
+
+  <!-- サマリー -->
+  <div class="panel">
+    <div class="panel-head">モデルの要点</div>
+    <div class="panel-body">
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">10年平均リターン（年率）</div>
+          <div class="metric-value btc" id="m-avg">—</div>
+          <div class="metric-sub">逓減を織り込み済み</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">標準偏差（将来の目安）</div>
+          <div class="metric-value" id="m-vol">—</div>
+          <div class="metric-sub" id="m-vol-sub">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">現在価格 vs モデル線</div>
+          <div class="metric-value" id="m-dev">—</div>
+          <div class="metric-sub" id="m-price">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">当てはまり</div>
+          <div class="metric-value" id="m-fit">—</div>
+          <div class="metric-sub" id="m-n">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- グラフ -->
+  <div class="panel">
+    <div class="panel-head">① 両対数（log-log）：底・天井ラインのフィット</div>
+    <img src="btc_powerlaw_log.png" alt="両対数グラフ" />
+  </div>
+  <div class="panel">
+    <div class="panel-head">② 時間軸・対数スケール：半減期サイクルと将来予測</div>
+    <img src="btc_powerlaw_time.png" alt="時間軸対数グラフ" />
+  </div>
+  <div class="panel">
+    <div class="panel-head">③ リニアスケール：現在価格基準の倍率</div>
+    <img src="btc_powerlaw_linear.png" alt="リニアスケールグラフ" />
+  </div>
+
+  <!-- 将来テーブル -->
+  <div class="panel">
+    <div class="panel-head">将来の年率リターン（パワーロー中央線・逓減）</div>
+    <div class="panel-body">
+      <table>
+        <thead>
+          <tr><th>年</th><th>年率リターン</th><th>モデル価格(USD)</th><th></th></tr>
+        </thead>
+        <tbody id="fwd-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="notice warn" id="caveat"></div>
+  <div class="notice" id="disclaimer" style="margin-top:10px"></div>
+</main>
+
+<script src="btc_powerlaw_data.js"></script>
+<script>
+(function () {
+  const d = window.BTC_DATA;
+  if (!d) {
+    document.querySelector('main').insertAdjacentHTML('beforeend',
+      '<div class="notice warn">データが読み込めません。先に <code>python btc_powerlaw.py</code> を実行してください。</div>');
+    return;
+  }
+  const pct  = v => (v * 100).toFixed(1) + '%';
+  const pctn = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%';
+  const usd  = v => '$' + Math.round(v).toLocaleString();
+
+  document.getElementById('m-avg').textContent = pct(d.summary.avg_annual_return_10y);
+
+  const vol = d.realized_volatility;
+  document.getElementById('m-vol').textContent = pct(vol.forward_estimate);
+  document.getElementById('m-vol-sub').textContent =
+    `全期間${pct(vol.full_history)} → 直近1年${pct(vol.last_1y)}`;
+
+  const dev = d.current.deviation_pct;
+  const devEl = document.getElementById('m-dev');
+  devEl.textContent = pctn(dev);
+  devEl.className = 'metric-value ' + (dev < 0 ? 'green' : 'red');
+  document.getElementById('m-price').textContent =
+    `${usd(d.current.actual_price)} / 線 ${usd(d.current.model_price)}`;
+
+  document.getElementById('m-fit').textContent = 'R² ' + d.fit.r2.toFixed(3);
+  document.getElementById('m-n').textContent =
+    `指数 n=${d.fit.n.toFixed(2)}（${d.fit.fit_start}〜${d.fit.fit_end}）`;
+
+  // 将来テーブル（リターンの長さでバー表示）
+  const body = document.getElementById('fwd-body');
+  const maxRet = Math.max(...d.forward.map(r => r.annual_return));
+  d.forward.forEach(r => {
+    const w = Math.max(2, (r.annual_return / maxRet) * 120);
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td>${r.year}</td><td>${pct(r.annual_return)}</td>` +
+      `<td>${usd(r.model_price)}</td>` +
+      `<td class="bar-cell"><span class="ret-bar" style="width:${w}px"></span></td>`;
+    body.appendChild(tr);
+  });
+
+  document.getElementById('caveat').innerHTML =
+    '<strong>注意：</strong>これは過去への「当てはめ」であり法則ではありません。' +
+    'サイクルはまだ3〜4個しかなく、ETFや規制で過去のパターンが崩れる可能性があります。' +
+    'パワーロー中央線は標準偏差（上下のブレ）を含みません。実際の価格は線の上下に大きく振れます。';
+  document.getElementById('disclaimer').textContent =
+    d.disclaimer + '　（生成: ' + d.generated_at + '）';
+})();
+</script>
+</body>
+</html>

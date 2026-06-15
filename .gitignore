@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.py
+
+# 内部管理ファイル
+CLAUDE.md
+STATUS.md
+goals/
+
+# 古いファイル・中間生成物
+asset_navi_frontier.png
+asset_navi_results.json
+btc_powerlaw_results.json
+requirements.txt
