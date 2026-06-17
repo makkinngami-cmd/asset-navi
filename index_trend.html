@@ -54,9 +54,15 @@
   <div id="container"></div>
 
   <div class="notice warn" style="margin-top:10px">
-    <strong>注意：</strong>これは過去への「当てはめ」であり法則ではありません。
-    トレンド線自体に推定誤差があり（特にSOXはR²が低め）、AIのような構造変化が起きると過去のトレンドが将来を過小評価することもあります。
-    平均回帰は「いつ・どの速さで起きるか」を保証しません。
+    <strong>このモデルには両面があります。</strong>
+    <ul style="margin:8px 0 0 18px;padding:0;line-height:1.8;">
+      <li><strong>回帰の見方</strong>：株価指数は長期トレンドへ平均回帰する傾向があり、現在大きく上にあるなら今後の期待リターンは低め。</li>
+      <li><strong>構造再評価の見方</strong>：AIのような構造変化が起きると、トレンド自体が上方シフトし「過去の線」が将来を過小評価する。この場合は回帰せず長期成長率（CAGR）に近いリターンになる。</li>
+    </ul>
+    <div style="margin-top:8px">
+      また半導体（SOX）の「3〜4年サイクル」は<strong>業界のファンダ（在庫・設備投資）では実在</strong>しますが、株価では周期・振幅が不安定で「時計のような予測」には使えません（期間の切り方でサイクルが見えたり消えたりします）。
+      このページは<strong>どちらか一方を断言せず、両シナリオをレンジで示す</strong>ことを優先しています。過去への当てはめであり、将来を保証しません。
+    </div>
   </div>
   <div class="notice" id="disclaimer" style="margin-top:10px"></div>
 </main>
@@ -81,17 +87,21 @@
     const devClass = devSig > 1.5 ? 'red' : (devSig < -1.0 ? 'green' : 'amber');
     const devWord = devSig > 1.5 ? '割高' : (devSig < -1.0 ? '割安' : '中立');
 
-    // 将来テーブル（主要ホライズン）
+    // 将来テーブル（主要ホライズン）— 2シナリオ並記
+    //   回帰シナリオ … 旧トレンドへ平均回帰（モデル本体・弱気アンカー）
+    //   構造再評価   … トレンド自体が上方シフトし回帰しない＝長期CAGRを得る（強気アンカー）
     const hs = [1, 3, 5, 10, 15];
     let rows = '';
     hs.forEach(h => {
       const p = exp.paths.find(x => x.horizon === h);
       if (!p) return;
-      const r = p.annual_return;
-      const cls = r < 0 ? 'red' : 'green';
+      const rRev = p.annual_return;          // 回帰シナリオ
+      const rStr = fit.cagr;                 // 構造再評価＝CAGR（回帰ドラッグなし）
+      const clsR = rRev < 0 ? 'red' : 'green';
+      const clsS = rStr < 0 ? 'red' : 'green';
       rows += `<tr><td>${h}年</td>` +
-              `<td class="${cls}">${pctn(r)}</td>` +
-              `<td>${num(p.price)}</td></tr>`;
+              `<td class="${clsR}">${pctn(rRev)}</td>` +
+              `<td class="${clsS}">${pctn(rStr)}</td></tr>`;
     });
 
     const html = `
@@ -112,8 +122,8 @@
             </div>
             <div class="metric">
               <div class="metric-label">10年期待リターン（年率）</div>
-              <div class="metric-value ${exp.annual_by_horizon['10'] < 0 ? 'red' : 'green'}">${pctn(exp.annual_by_horizon['10'])}</div>
-              <div class="metric-sub">平均回帰 半減期 ${fit.half_life_years.toFixed(1)}年</div>
+              <div class="metric-value">${pctn(exp.annual_by_horizon['10'])} 〜 ${pctn(fit.cagr)}</div>
+              <div class="metric-sub">回帰 〜 構造再評価の幅</div>
             </div>
             <div class="metric">
               <div class="metric-label">標準偏差（年率）</div>
@@ -132,12 +142,21 @@
         <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
       </div>
       <div class="panel">
-        <div class="panel-head">平均回帰を織り込んだ将来リターン</div>
+        <div class="panel-head">将来の年率リターン — 2つのシナリオ</div>
         <div class="panel-body">
           <table>
-            <thead><tr><th>投資期間</th><th>期待年率リターン</th><th>予想指数値</th></tr></thead>
+            <thead><tr>
+              <th>投資期間</th>
+              <th>回帰シナリオ<br><span style="font-weight:400;font-size:11px;color:var(--muted)">旧トレンドに戻る（慎重）</span></th>
+              <th>構造再評価シナリオ<br><span style="font-weight:400;font-size:11px;color:var(--muted)">トレンド自体が上方シフト（強気）</span></th>
+            </tr></thead>
             <tbody>${rows}</tbody>
           </table>
+          <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:12px;">
+            <strong>回帰シナリオ</strong>＝現在の${devSig >= 0 ? '+' : ''}${devSig.toFixed(1)}σの乖離が半減期${fit.half_life_years.toFixed(1)}年で縮小し、過去のトレンド線に戻る前提。
+            <strong>構造再評価シナリオ</strong>＝AI等で成長そのものが底上げされ、現在価格が「新しい正常」として長期CAGR（${pct(fit.cagr)}）で伸びる前提。
+            <strong>実際はこの2つの間</strong>になる可能性が高く、どちらか一方を信じ込まないための併記です。
+          </p>
         </div>
       </div>
     `;
