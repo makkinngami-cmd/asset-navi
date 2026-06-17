@@ -1,7 +1,7 @@
 window.INDEX_DATA = {
   "model": "株価指数 指数トレンドモデル",
   "disclaimer": "本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。",
-  "generated_at": "2026-06-17 04:13 UTC",
+  "generated_at": "2026-06-17 10:42 UTC",
   "indices": {
     "ndx": {
       "label": "NASDAQ100",
@@ -135,6 +135,31 @@ window.INDEX_DATA = {
           }
         ]
       },
+      "cycle": {
+        "available": true,
+        "cycle_start": "2010-01-01",
+        "avg_cycle_years": null,
+        "avg_peak_gap": null,
+        "avg_trough_gap": null,
+        "peaks": [
+          {
+            "date": "2021-10-31",
+            "residual": 0.38312249057995373,
+            "price": 15663.888504684994
+          }
+        ],
+        "troughs": [
+          {
+            "date": "2022-12-31",
+            "residual": -0.04676525776219219,
+            "price": 11622.45298997207
+          }
+        ],
+        "next_peak": null,
+        "next_trough": null,
+        "years_since_last_peak": 4.627397260273972,
+        "years_since_last_trough": 3.4602739726027396
+      },
       "realized_volatility": {
         "full_history": 0.26361123614791515,
         "last_3y": 0.20070917610916048,
@@ -144,7 +169,8 @@ window.INDEX_DATA = {
       },
       "charts": [
         "index_ndx_log.png",
-        "index_ndx_deviation.png"
+        "index_ndx_deviation.png",
+        "index_ndx_cycle.png"
       ]
     },
     "sox": {
@@ -279,6 +305,77 @@ window.INDEX_DATA = {
           }
         ]
       },
+      "cycle": {
+        "available": true,
+        "cycle_start": "2010-01-01",
+        "avg_cycle_years": 3.2,
+        "avg_peak_gap": 3.2945205479452055,
+        "avg_trough_gap": 3.1054794520547944,
+        "peaks": [
+          {
+            "date": "2011-03-31",
+            "residual": -0.5340368580258981,
+            "price": 442.07159568748006
+          },
+          {
+            "date": "2015-04-30",
+            "residual": -0.4337675942630127,
+            "price": 708.8161403393833
+          },
+          {
+            "date": "2018-01-31",
+            "residual": -0.05985180776285072,
+            "price": 1324.3241394885329
+          },
+          {
+            "date": "2021-11-30",
+            "residual": 0.5946874120253497,
+            "price": 3612.3254840415607
+          },
+          {
+            "date": "2024-05-31",
+            "residual": 0.7114353225528666,
+            "price": 5097.76212050565
+          }
+        ],
+        "troughs": [
+          {
+            "date": "2012-11-30",
+            "residual": -0.8222737554873343,
+            "price": 385.81917924161905
+          },
+          {
+            "date": "2016-03-31",
+            "residual": -0.6220422639091392,
+            "price": 638.4988174083195
+          },
+          {
+            "date": "2018-12-31",
+            "residual": -0.21152454846115215,
+            "price": 1236.8020152358363
+          },
+          {
+            "date": "2022-11-30",
+            "residual": 0.1686541974196078,
+            "price": 2584.0280591207197
+          },
+          {
+            "date": "2025-04-30",
+            "residual": 0.5452503118578582,
+            "price": 4692.268507799771
+          }
+        ],
+        "next_peak": {
+          "date": "2027-09-15",
+          "price": 3181.309919267948
+        },
+        "next_trough": {
+          "date": "2028-06-06",
+          "price": 2920.3726690350145
+        },
+        "years_since_last_peak": 2.043835616438356,
+        "years_since_last_trough": 1.1287671232876713
+      },
       "realized_volatility": {
         "full_history": 0.37705926845027726,
         "last_3y": 0.373441042138299,
@@ -288,7 +385,8 @@ window.INDEX_DATA = {
       },
       "charts": [
         "index_sox_log.png",
-        "index_sox_deviation.png"
+        "index_sox_deviation.png",
+        "index_sox_cycle.png"
       ]
     }
   }

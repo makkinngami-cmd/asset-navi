@@ -104,6 +104,49 @@
               `<td class="${clsS}">${pctn(rStr)}</td></tr>`;
     });
 
+    // サイクルセクション（天井・底が各2回以上＝チャートが生成されたときだけ）
+    const cyc = ix.cycle;
+    const hasCycle = cyc && cyc.available && cyc.peaks && cyc.peaks.length >= 2
+                     && cyc.troughs && cyc.troughs.length >= 2 && ix.charts.length >= 3;
+    let cycleSection = '';
+    if (hasCycle) {
+      const yr = v => (v == null ? '—' : v.toFixed(1) + '年');
+      const ymd = s => s ? s.slice(0, 7) : '—';
+      const sincePeak = cyc.years_since_last_peak, sinceTrough = cyc.years_since_last_trough;
+      const phase = (sinceTrough != null && sincePeak != null)
+        ? (sinceTrough < sincePeak ? `前回の底から${yr(sinceTrough)}＝上昇局面寄り` : `前回の天井から${yr(sincePeak)}＝下降局面寄り`)
+        : '—';
+      cycleSection = `
+        <div class="panel">
+          <div class="panel-head">③ 3〜4年サイクル（2010年以降）— BTC半減期サイクル風</div>
+          <img src="${ix.charts[2]}" alt="${ix.label} サイクル" />
+          <div class="panel-body" style="border-top:1px solid var(--line)">
+            <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+              <div class="metric">
+                <div class="metric-label">平均サイクル長</div>
+                <div class="metric-value">${cyc.avg_cycle_years ? cyc.avg_cycle_years.toFixed(1) + '年' : '不規則'}</div>
+                <div class="metric-sub">天井${cyc.peaks.length}回 / 底${cyc.troughs.length}回</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">現在のサイクル位相</div>
+                <div class="metric-value" style="font-size:15px">${phase}</div>
+                <div class="metric-sub">★は平均周期からの予測（不確実）</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">次の予測タイミング</div>
+                <div class="metric-value" style="font-size:15px">天井 ${ymd(cyc.next_peak && cyc.next_peak.date)}</div>
+                <div class="metric-sub">底 ${ymd(cyc.next_trough && cyc.next_trough.date)}</div>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:12px;">
+              2010年以降は約${cyc.avg_cycle_years ? cyc.avg_cycle_years.toFixed(1) : '3〜4'}年周期で天井・底を繰り返してきました（半導体の在庫・設備投資サイクルに対応）。
+              ただし周期は2.5〜4年とばらつき、位相も毎回ずれます。<strong>★の予測は平均周期を機械的に伸ばしただけで、当たる保証はありません</strong>。
+              「だいたいこのリズム」という現在地の参考としてご覧ください。
+            </p>
+          </div>
+        </div>`;
+    }
+
     const html = `
       <h2 style="color:${ix.color}">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
       <div class="panel">
@@ -141,6 +184,7 @@
         <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
         <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
       </div>
+      ${cycleSection}
       <div class="panel">
         <div class="panel-head">将来の年率リターン — 2つのシナリオ</div>
         <div class="panel-body">
