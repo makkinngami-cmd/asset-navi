@@ -110,12 +110,10 @@
                      && cyc.troughs && cyc.troughs.length >= 2 && ix.charts.length >= 3;
     let cycleSection = '';
     if (hasCycle) {
-      const yr = v => (v == null ? '—' : v.toFixed(1) + '年');
       const ymd = s => s ? s.slice(0, 7) : '—';
-      const sincePeak = cyc.years_since_last_peak, sinceTrough = cyc.years_since_last_trough;
-      const phase = (sinceTrough != null && sincePeak != null)
-        ? (sinceTrough < sincePeak ? `前回の底から${yr(sinceTrough)}＝上昇局面寄り` : `前回の天井から${yr(sincePeak)}＝下降局面寄り`)
-        : '—';
+      const projPeak = (cyc.projections || []).find(p => p.type === 'peak');
+      const projTrough = (cyc.projections || []).find(p => p.type === 'trough');
+      const riseM = cyc.avg_rise_months, fallM = cyc.avg_fall_months;
       cycleSection = `
         <div class="panel">
           <div class="panel-head">③ 3〜4年サイクル（2010年以降）— BTC半減期サイクル風</div>
@@ -128,20 +126,20 @@
                 <div class="metric-sub">天井${cyc.peaks.length}回 / 底${cyc.troughs.length}回</div>
               </div>
               <div class="metric">
-                <div class="metric-label">現在のサイクル位相</div>
-                <div class="metric-value" style="font-size:15px">${phase}</div>
-                <div class="metric-sub">★は平均周期からの予測（不確実）</div>
+                <div class="metric-label">上昇・下降の所要</div>
+                <div class="metric-value" style="font-size:15px">上昇 約${riseM ? Math.round(riseM) : '—'}ヶ月</div>
+                <div class="metric-sub">下降 約${fallM ? Math.round(fallM) : '—'}ヶ月（底→天井→底）</div>
               </div>
               <div class="metric">
                 <div class="metric-label">次の予測タイミング</div>
-                <div class="metric-value" style="font-size:15px">天井 ${ymd(cyc.next_peak && cyc.next_peak.date)}</div>
-                <div class="metric-sub">底 ${ymd(cyc.next_trough && cyc.next_trough.date)}</div>
+                <div class="metric-value" style="font-size:15px">天井 ${ymd(projPeak && projPeak.date)}</div>
+                <div class="metric-sub">底 ${ymd(projTrough && projTrough.date)}</div>
               </div>
             </div>
             <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:12px;">
-              2010年以降は約${cyc.avg_cycle_years ? cyc.avg_cycle_years.toFixed(1) : '3〜4'}年周期で天井・底を繰り返してきました（半導体の在庫・設備投資サイクルに対応）。
-              ただし周期は2.5〜4年とばらつき、位相も毎回ずれます。<strong>★の予測は平均周期を機械的に伸ばしただけで、当たる保証はありません</strong>。
-              「だいたいこのリズム」という現在地の参考としてご覧ください。
+              灰色線は<strong>2010年以降のデータで引き直したトレンド</strong>（CAGR ${cyc.trend_cagr ? (cyc.trend_cagr*100).toFixed(0) : '—'}%）。
+              この期間は約${cyc.avg_cycle_years ? cyc.avg_cycle_years.toFixed(1) : '3'}年周期で、<strong>上昇は平均${riseM ? Math.round(riseM) : '—'}ヶ月かけてゆっくり、下降は約${fallM ? Math.round(fallM) : '—'}ヶ月で急</strong>という非対称があります（半導体の在庫・設備投資サイクルに対応）。
+              ★は<strong>直近の転換点に実測の局面長を足しただけ</strong>の予測で、周期は2.5〜4年とばらつくため当たる保証はありません。現在地のリズムの参考としてご覧ください。
             </p>
           </div>
         </div>`;
