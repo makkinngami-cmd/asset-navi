@@ -1,7 +1,7 @@
 window.INDEX_DATA = {
   "model": "株価指数 指数トレンドモデル",
   "disclaimer": "本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。",
-  "generated_at": "2026-06-17 22:25 UTC",
+  "generated_at": "2026-06-17 22:32 UTC",
   "indices": {
     "spx": {
       "label": "S&P500",
