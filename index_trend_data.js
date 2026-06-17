@@ -1,8 +1,207 @@
 window.INDEX_DATA = {
   "model": "株価指数 指数トレンドモデル",
   "disclaimer": "本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。",
-  "generated_at": "2026-06-17 11:07 UTC",
+  "generated_at": "2026-06-17 11:39 UTC",
   "indices": {
+    "spx": {
+      "label": "S&P500",
+      "ticker": "^GSPC",
+      "color": "#6b3fa0",
+      "fit": {
+        "t0": "1990-01-02",
+        "a": 5.985584873726749,
+        "b": 0.000189604232107441,
+        "r2": 0.8979786874978457,
+        "sigma_log": 0.24573463186835454,
+        "cagr": 0.07165645983802116,
+        "rho1": 0.7970313777226932,
+        "half_life_years": 3.055379612304562,
+        "fit_start": "1990-01-02",
+        "fit_end": "2026-06-16",
+        "n_points": 9181
+      },
+      "expected": {
+        "current_price": 7511.35009765625,
+        "trend_price_now": 4964,
+        "deviation_log": 0.4142,
+        "deviation_sigma": 1.69,
+        "annual_by_horizon": {
+          "1": -0.0148,
+          "2": -0.0062,
+          "3": 0.0011,
+          "4": 0.0075,
+          "5": 0.0131,
+          "6": 0.0181,
+          "7": 0.0224,
+          "8": 0.0262,
+          "9": 0.0296,
+          "10": 0.0326,
+          "11": 0.0353,
+          "12": 0.0377,
+          "13": 0.0398,
+          "14": 0.0418,
+          "15": 0.0435
+        },
+        "paths": [
+          {
+            "year": 2027,
+            "horizon": 1,
+            "price": 7401,
+            "annual_return": -0.0148
+          },
+          {
+            "year": 2028,
+            "horizon": 2,
+            "price": 7418,
+            "annual_return": -0.0062
+          },
+          {
+            "year": 2029,
+            "horizon": 3,
+            "price": 7536,
+            "annual_return": 0.0011
+          },
+          {
+            "year": 2030,
+            "horizon": 4,
+            "price": 7740,
+            "annual_return": 0.0075
+          },
+          {
+            "year": 2031,
+            "horizon": 5,
+            "price": 8018,
+            "annual_return": 0.0131
+          },
+          {
+            "year": 2032,
+            "horizon": 6,
+            "price": 8365,
+            "annual_return": 0.0181
+          },
+          {
+            "year": 2033,
+            "horizon": 7,
+            "price": 8773,
+            "annual_return": 0.0224
+          },
+          {
+            "year": 2034,
+            "horizon": 8,
+            "price": 9241,
+            "annual_return": 0.0262
+          },
+          {
+            "year": 2035,
+            "horizon": 9,
+            "price": 9769,
+            "annual_return": 0.0296
+          },
+          {
+            "year": 2036,
+            "horizon": 10,
+            "price": 10357,
+            "annual_return": 0.0326
+          },
+          {
+            "year": 2037,
+            "horizon": 11,
+            "price": 11003,
+            "annual_return": 0.0353
+          },
+          {
+            "year": 2038,
+            "horizon": 12,
+            "price": 11710,
+            "annual_return": 0.0377
+          },
+          {
+            "year": 2039,
+            "horizon": 13,
+            "price": 12480,
+            "annual_return": 0.0398
+          },
+          {
+            "year": 2040,
+            "horizon": 14,
+            "price": 13318,
+            "annual_return": 0.0418
+          },
+          {
+            "year": 2041,
+            "horizon": 15,
+            "price": 14223,
+            "annual_return": 0.0435
+          }
+        ]
+      },
+      "cycle": {
+        "available": true,
+        "cycle_start": "2013-01-01",
+        "trend_cagr": 0.11390962317626463,
+        "avg_cycle_years": 2.5013698630136987,
+        "avg_rise_days": 518.0,
+        "avg_fall_days": 395.0,
+        "avg_rise_months": 17.0,
+        "avg_fall_months": 13.0,
+        "peaks": [
+          {
+            "date": "2021-10-31",
+            "type": "peak",
+            "residual": 0.14108259989116037,
+            "price": 4559.058190244483
+          }
+        ],
+        "troughs": [
+          {
+            "date": "2020-05-31",
+            "type": "trough",
+            "residual": -0.14753291661783607,
+            "price": 2931.1806071452047
+          },
+          {
+            "date": "2022-11-30",
+            "type": "trough",
+            "residual": -0.13503003560113552,
+            "price": 3887.421019810527
+          }
+        ],
+        "transitions": [
+          {
+            "kind": "rise",
+            "days": 518,
+            "months": 17.0,
+            "from_date": "2020-05-31",
+            "to_date": "2021-10-31",
+            "from_price": 2931.1806071452047,
+            "to_price": 4559.058190244483
+          },
+          {
+            "kind": "fall",
+            "days": 395,
+            "months": 13.0,
+            "from_date": "2021-10-31",
+            "to_date": "2022-11-30",
+            "from_price": 4559.058190244483,
+            "to_price": 3887.421019810527
+          }
+        ],
+        "projections": [],
+        "years_since_last_peak": 4.627397260273972,
+        "years_since_last_trough": 3.5452054794520547
+      },
+      "realized_volatility": {
+        "full_history": 0.18029968436528018,
+        "last_3y": 0.14930414976997325,
+        "last_1y": 0.1243091139414376,
+        "forward_estimate": 0.14930414976997325,
+        "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
+      },
+      "charts": [
+        "index_spx_log.png",
+        "index_spx_deviation.png"
+      ]
+    },
     "ndx": {
       "label": "NASDAQ100",
       "ticker": "^NDX",
