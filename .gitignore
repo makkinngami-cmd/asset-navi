@@ -12,4 +12,5 @@ goals/
 asset_navi_frontier.png
 asset_navi_results.json
 btc_powerlaw_results.json
+index_trend_results.json
 requirements.txt

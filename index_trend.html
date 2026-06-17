@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>株価指数トレンド予測（NASDAQ100 / SOX）— アセットナビ</title>
+  <style>
+    :root {
+      --bg: #f6f7f9; --panel: #ffffff; --ink: #172026; --muted: #66737d;
+      --line: #d8e0e4; --blue: #2364aa; --amber: #b46b1d; --red: #bd3b3b; --green: #0b8f6a;
+      font-family: "Segoe UI", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+    h1 { font-size: 26px; margin-bottom: 4px; }
+    h2 { font-size: 20px; margin: 28px 0 12px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 22px; line-height: 1.6; }
+    a.back { color: var(--blue); font-size: 13px; text-decoration: none; }
+
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(24,32,38,.06); margin-bottom: 16px; }
+    .panel-head { padding: 12px 16px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); background: #fafbfc; }
+    .panel-body { padding: 16px; }
+    img { display: block; width: 100%; height: auto; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 760px) { .metrics { grid-template-columns: 1fr 1fr; } }
+    .metric { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfc; }
+    .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .metric-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .metric-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .red { color: var(--red); }
+    .green { color: var(--green); }
+    .amber { color: var(--amber); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; }
+
+    .notice { border-left: 4px solid var(--line); padding: 10px 12px; color: var(--muted); font-size: 12px; line-height: 1.7; border-radius: 0 6px 6px 0; background: #f9fafb; }
+    .warn { border-left-color: var(--amber); background: #fff6ea; color: #6e4a12; }
+  </style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">← アセットナビに戻る</a>
+  <h1 style="margin-top:8px">株価指数トレンド予測</h1>
+  <p class="subtitle">
+    株価指数は一定％で複利成長する<strong>指数トレンド（log-linear）</strong>＋σチャンネルで当てはめます。
+    現在トレンドからどれだけ割安／割高か、平均回帰を織り込んだ将来リターンの<strong>参考値</strong>を出します。
+  </p>
+
+  <div id="container"></div>
+
+  <div class="notice warn" style="margin-top:10px">
+    <strong>注意：</strong>これは過去への「当てはめ」であり法則ではありません。
+    トレンド線自体に推定誤差があり（特にSOXはR²が低め）、AIのような構造変化が起きると過去のトレンドが将来を過小評価することもあります。
+    平均回帰は「いつ・どの速さで起きるか」を保証しません。
+  </div>
+  <div class="notice" id="disclaimer" style="margin-top:10px"></div>
+</main>
+
+<script src="index_trend_data.js"></script>
+<script>
+(function () {
+  const d = window.INDEX_DATA;
+  const root = document.getElementById('container');
+  if (!d) {
+    root.innerHTML = '<div class="notice warn">データが読み込めません。先に <code>python index_trend.py</code> を実行してください。</div>';
+    return;
+  }
+  const pct  = v => (v * 100).toFixed(1) + '%';
+  const pctn = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%';
+  const num  = v => Math.round(v).toLocaleString();
+
+  Object.keys(d.indices).forEach(key => {
+    const ix = d.indices[key];
+    const fit = ix.fit, exp = ix.expected, vol = ix.realized_volatility;
+    const devSig = exp.deviation_sigma;
+    const devClass = devSig > 1.5 ? 'red' : (devSig < -1.0 ? 'green' : 'amber');
+    const devWord = devSig > 1.5 ? '割高' : (devSig < -1.0 ? '割安' : '中立');
+
+    // 将来テーブル（主要ホライズン）
+    const hs = [1, 3, 5, 10, 15];
+    let rows = '';
+    hs.forEach(h => {
+      const p = exp.paths.find(x => x.horizon === h);
+      if (!p) return;
+      const r = p.annual_return;
+      const cls = r < 0 ? 'red' : 'green';
+      rows += `<tr><td>${h}年</td>` +
+              `<td class="${cls}">${pctn(r)}</td>` +
+              `<td>${num(p.price)}</td></tr>`;
+    });
+
+    const html = `
+      <h2 style="color:${ix.color}">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
+      <div class="panel">
+        <div class="panel-head">モデルの要点</div>
+        <div class="panel-body">
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">長期トレンド成長率（CAGR）</div>
+              <div class="metric-value">${pct(fit.cagr)}</div>
+              <div class="metric-sub">${fit.fit_start.slice(0,4)}〜 当てはめ R²=${fit.r2.toFixed(2)}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">現在のトレンド乖離</div>
+              <div class="metric-value ${devClass}">${devSig >= 0 ? '+' : ''}${devSig.toFixed(1)}σ（${devWord}）</div>
+              <div class="metric-sub">現在 ${num(exp.current_price)} / 線 ${num(exp.trend_price_now)}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">10年期待リターン（年率）</div>
+              <div class="metric-value ${exp.annual_by_horizon['10'] < 0 ? 'red' : 'green'}">${pctn(exp.annual_by_horizon['10'])}</div>
+              <div class="metric-sub">平均回帰 半減期 ${fit.half_life_years.toFixed(1)}年</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">標準偏差（年率）</div>
+              <div class="metric-value">${pct(vol.forward_estimate)}</div>
+              <div class="metric-sub">全期間${pct(vol.full_history)} → 直近3年${pct(vol.last_3y)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">① 指数トレンド＋σチャンネル（対数スケール）</div>
+        <img src="${ix.charts[0]}" alt="${ix.label} トレンド" />
+      </div>
+      <div class="panel">
+        <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
+        <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
+      </div>
+      <div class="panel">
+        <div class="panel-head">平均回帰を織り込んだ将来リターン</div>
+        <div class="panel-body">
+          <table>
+            <thead><tr><th>投資期間</th><th>期待年率リターン</th><th>予想指数値</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    root.insertAdjacentHTML('beforeend', html);
+  });
+
+  document.getElementById('disclaimer').textContent =
+    d.disclaimer + '　（生成: ' + d.generated_at + '）';
+})();
+</script>
+</body>
+</html>
