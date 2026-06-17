@@ -1,7 +1,7 @@
 window.INDEX_DATA = {
   "model": "株価指数 指数トレンドモデル",
   "disclaimer": "本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。",
-  "generated_at": "2026-06-17 11:39 UTC",
+  "generated_at": "2026-06-17 22:25 UTC",
   "indices": {
     "spx": {
       "label": "S&P500",
@@ -9,192 +9,192 @@ window.INDEX_DATA = {
       "color": "#6b3fa0",
       "fit": {
         "t0": "1990-01-02",
-        "a": 5.985584873726749,
-        "b": 0.000189604232107441,
-        "r2": 0.8979786874978457,
-        "sigma_log": 0.24573463186835454,
-        "cagr": 0.07165645983802116,
-        "rho1": 0.7970313777226932,
-        "half_life_years": 3.055379612304562,
+        "a": 5.98549748116656,
+        "b": 0.00018962395508277343,
+        "r2": 0.8980010670629871,
+        "sigma_log": 0.2457570063686013,
+        "cagr": 0.07166417459847141,
+        "rho1": 0.7970390106513964,
+        "half_life_years": 3.0555085966287034,
         "fit_start": "1990-01-02",
-        "fit_end": "2026-06-16",
-        "n_points": 9181
+        "fit_end": "2026-06-17",
+        "n_points": 9182
       },
       "expected": {
-        "current_price": 7511.35009765625,
-        "trend_price_now": 4964,
-        "deviation_log": 0.4142,
-        "deviation_sigma": 1.69,
+        "current_price": 7420.10009765625,
+        "trend_price_now": 4966,
+        "deviation_log": 0.4016,
+        "deviation_sigma": 1.63,
         "annual_by_horizon": {
-          "1": -0.0148,
-          "2": -0.0062,
-          "3": 0.0011,
-          "4": 0.0075,
-          "5": 0.0131,
-          "6": 0.0181,
-          "7": 0.0224,
-          "8": 0.0262,
-          "9": 0.0296,
-          "10": 0.0326,
-          "11": 0.0353,
-          "12": 0.0377,
-          "13": 0.0398,
-          "14": 0.0418,
-          "15": 0.0435
+          "1": -0.0122,
+          "2": -0.0039,
+          "3": 0.0032,
+          "4": 0.0094,
+          "5": 0.0149,
+          "6": 0.0197,
+          "7": 0.0239,
+          "8": 0.0276,
+          "9": 0.0309,
+          "10": 0.0338,
+          "11": 0.0364,
+          "12": 0.0387,
+          "13": 0.0408,
+          "14": 0.0427,
+          "15": 0.0443
         },
         "paths": [
           {
             "year": 2027,
             "horizon": 1,
-            "price": 7401,
-            "annual_return": -0.0148
+            "price": 7329,
+            "annual_return": -0.0122
           },
           {
             "year": 2028,
             "horizon": 2,
-            "price": 7418,
-            "annual_return": -0.0062
+            "price": 7362,
+            "annual_return": -0.0039
           },
           {
             "year": 2029,
             "horizon": 3,
-            "price": 7536,
-            "annual_return": 0.0011
+            "price": 7491,
+            "annual_return": 0.0032
           },
           {
             "year": 2030,
             "horizon": 4,
-            "price": 7740,
-            "annual_return": 0.0075
+            "price": 7704,
+            "annual_return": 0.0094
           },
           {
             "year": 2031,
             "horizon": 5,
-            "price": 8018,
-            "annual_return": 0.0131
+            "price": 7989,
+            "annual_return": 0.0149
           },
           {
             "year": 2032,
             "horizon": 6,
-            "price": 8365,
-            "annual_return": 0.0181
+            "price": 8341,
+            "annual_return": 0.0197
           },
           {
             "year": 2033,
             "horizon": 7,
-            "price": 8773,
-            "annual_return": 0.0224
+            "price": 8754,
+            "annual_return": 0.0239
           },
           {
             "year": 2034,
             "horizon": 8,
-            "price": 9241,
-            "annual_return": 0.0262
+            "price": 9226,
+            "annual_return": 0.0276
           },
           {
             "year": 2035,
             "horizon": 9,
-            "price": 9769,
-            "annual_return": 0.0296
+            "price": 9757,
+            "annual_return": 0.0309
           },
           {
             "year": 2036,
             "horizon": 10,
-            "price": 10357,
-            "annual_return": 0.0326
+            "price": 10348,
+            "annual_return": 0.0338
           },
           {
             "year": 2037,
             "horizon": 11,
-            "price": 11003,
-            "annual_return": 0.0353
+            "price": 10997,
+            "annual_return": 0.0364
           },
           {
             "year": 2038,
             "horizon": 12,
-            "price": 11710,
-            "annual_return": 0.0377
+            "price": 11706,
+            "annual_return": 0.0387
           },
           {
             "year": 2039,
             "horizon": 13,
-            "price": 12480,
-            "annual_return": 0.0398
+            "price": 12478,
+            "annual_return": 0.0408
           },
           {
             "year": 2040,
             "horizon": 14,
             "price": 13318,
-            "annual_return": 0.0418
+            "annual_return": 0.0427
           },
           {
             "year": 2041,
             "horizon": 15,
-            "price": 14223,
-            "annual_return": 0.0435
+            "price": 14224,
+            "annual_return": 0.0443
           }
         ]
       },
       "cycle": {
         "available": true,
         "cycle_start": "2013-01-01",
-        "trend_cagr": 0.11390962317626463,
-        "avg_cycle_years": 2.5013698630136987,
-        "avg_rise_days": 518.0,
-        "avg_fall_days": 395.0,
-        "avg_rise_months": 17.0,
-        "avg_fall_months": 13.0,
+        "trend_cagr": 0.11392851180010188,
+        "avg_cycle_years": 2.5561643835616437,
+        "avg_rise_days": 651.0,
+        "avg_fall_days": 282.0,
+        "avg_rise_months": 21.4,
+        "avg_fall_months": 9.3,
         "peaks": [
           {
-            "date": "2021-10-31",
+            "date": "2022-01-03",
             "type": "peak",
-            "residual": 0.14108259989116037,
-            "price": 4559.058190244483
+            "residual": 0.17287355868215926,
+            "price": 4796.56005859375
           }
         ],
         "troughs": [
           {
-            "date": "2020-05-31",
+            "date": "2020-03-23",
             "type": "trough",
-            "residual": -0.14753291661783607,
-            "price": 2931.1806071452047
+            "residual": -0.39727725664045543,
+            "price": 2237.39990234375
           },
           {
-            "date": "2022-11-30",
+            "date": "2022-10-12",
             "type": "trough",
-            "residual": -0.13503003560113552,
-            "price": 3887.421019810527
+            "residual": -0.20385099433949172,
+            "price": 3577.030029296875
           }
         ],
         "transitions": [
           {
             "kind": "rise",
-            "days": 518,
-            "months": 17.0,
-            "from_date": "2020-05-31",
-            "to_date": "2021-10-31",
-            "from_price": 2931.1806071452047,
-            "to_price": 4559.058190244483
+            "days": 651,
+            "months": 21.4,
+            "from_date": "2020-03-23",
+            "to_date": "2022-01-03",
+            "from_price": 2237.39990234375,
+            "to_price": 4796.56005859375
           },
           {
             "kind": "fall",
-            "days": 395,
-            "months": 13.0,
-            "from_date": "2021-10-31",
-            "to_date": "2022-11-30",
-            "from_price": 4559.058190244483,
-            "to_price": 3887.421019810527
+            "days": 282,
+            "months": 9.3,
+            "from_date": "2022-01-03",
+            "to_date": "2022-10-12",
+            "from_price": 4796.56005859375,
+            "to_price": 3577.030029296875
           }
         ],
         "projections": [],
-        "years_since_last_peak": 4.627397260273972,
-        "years_since_last_trough": 3.5452054794520547
+        "years_since_last_peak": 4.454794520547945,
+        "years_since_last_trough": 3.682191780821918
       },
       "realized_volatility": {
-        "full_history": 0.18029968436528018,
-        "last_3y": 0.14930414976997325,
-        "last_1y": 0.1243091139414376,
-        "forward_estimate": 0.14930414976997325,
+        "full_history": 0.18030185993004114,
+        "last_3y": 0.14944845502984813,
+        "last_1y": 0.12465603839727893,
+        "forward_estimate": 0.14944845502984813,
         "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
       },
       "charts": [
@@ -208,199 +208,199 @@ window.INDEX_DATA = {
       "color": "#2364aa",
       "fit": {
         "t0": "1990-01-02",
-        "a": 5.688379030285443,
-        "b": 0.00030861176137167873,
-        "r2": 0.9006702687679335,
-        "sigma_log": 0.39407155837099017,
-        "cagr": 0.11923262351194808,
-        "rho1": 0.7694991800834546,
-        "half_life_years": 2.645444518836434,
+        "a": 5.688270191818522,
+        "b": 0.0003086363243138068,
+        "r2": 0.9006980830021086,
+        "sigma_log": 0.3940846825283078,
+        "cagr": 0.11924265800777811,
+        "rho1": 0.7695050472686843,
+        "half_life_years": 2.6455215035458632,
         "fit_start": "1990-01-02",
-        "fit_end": "2026-06-16",
-        "n_points": 9181
+        "fit_end": "2026-06-17",
+        "n_points": 9182
       },
       "expected": {
-        "current_price": 29968.130859375,
-        "trend_price_now": 17984,
-        "deviation_log": 0.5107,
-        "deviation_sigma": 1.3,
+        "current_price": 29670.947265625,
+        "trend_price_now": 17993,
+        "deviation_log": 0.5002,
+        "deviation_sigma": 1.27,
         "annual_by_horizon": {
-          "1": -0.0051,
-          "2": 0.0087,
-          "3": 0.0203,
-          "4": 0.0303,
-          "5": 0.0389,
-          "6": 0.0463,
-          "7": 0.0528,
-          "8": 0.0584,
-          "9": 0.0633,
-          "10": 0.0676,
-          "11": 0.0713,
-          "12": 0.0747,
-          "13": 0.0776,
-          "14": 0.0802,
-          "15": 0.0826
+          "1": -0.0026,
+          "2": 0.0109,
+          "3": 0.0222,
+          "4": 0.032,
+          "5": 0.0405,
+          "6": 0.0478,
+          "7": 0.0541,
+          "8": 0.0596,
+          "9": 0.0644,
+          "10": 0.0686,
+          "11": 0.0723,
+          "12": 0.0756,
+          "13": 0.0785,
+          "14": 0.081,
+          "15": 0.0833
         },
         "paths": [
           {
             "year": 2027,
             "horizon": 1,
-            "price": 29817,
-            "annual_return": -0.0051
+            "price": 29593,
+            "annual_return": -0.0026
           },
           {
             "year": 2028,
             "horizon": 2,
-            "price": 30492,
-            "annual_return": 0.0087
+            "price": 30319,
+            "annual_return": 0.0109
           },
           {
             "year": 2029,
             "horizon": 3,
-            "price": 31830,
-            "annual_return": 0.0203
+            "price": 31695,
+            "annual_return": 0.0222
           },
           {
             "year": 2030,
             "horizon": 4,
-            "price": 33764,
-            "annual_return": 0.0303
+            "price": 33659,
+            "annual_return": 0.032
           },
           {
             "year": 2031,
             "horizon": 5,
-            "price": 36262,
-            "annual_return": 0.0389
+            "price": 36181,
+            "annual_return": 0.0405
           },
           {
             "year": 2032,
             "horizon": 6,
-            "price": 39329,
-            "annual_return": 0.0463
+            "price": 39267,
+            "annual_return": 0.0478
           },
           {
             "year": 2033,
             "horizon": 7,
-            "price": 42956,
-            "annual_return": 0.0528
+            "price": 42910,
+            "annual_return": 0.0541
           },
           {
             "year": 2034,
             "horizon": 8,
-            "price": 47182,
-            "annual_return": 0.0584
+            "price": 47150,
+            "annual_return": 0.0596
           },
           {
             "year": 2035,
             "horizon": 9,
-            "price": 52049,
-            "annual_return": 0.0633
+            "price": 52030,
+            "annual_return": 0.0644
           },
           {
             "year": 2036,
             "horizon": 10,
-            "price": 57628,
-            "annual_return": 0.0676
+            "price": 57620,
+            "annual_return": 0.0686
           },
           {
             "year": 2037,
             "horizon": 11,
-            "price": 63949,
-            "annual_return": 0.0713
+            "price": 63952,
+            "annual_return": 0.0723
           },
           {
             "year": 2038,
             "horizon": 12,
-            "price": 71103,
-            "annual_return": 0.0747
+            "price": 71117,
+            "annual_return": 0.0756
           },
           {
             "year": 2039,
             "horizon": 13,
-            "price": 79179,
-            "annual_return": 0.0776
+            "price": 79202,
+            "annual_return": 0.0785
           },
           {
             "year": 2040,
             "horizon": 14,
-            "price": 88301,
-            "annual_return": 0.0802
+            "price": 88335,
+            "annual_return": 0.081
           },
           {
             "year": 2041,
             "horizon": 15,
-            "price": 98533,
-            "annual_return": 0.0826
+            "price": 98578,
+            "annual_return": 0.0833
           }
         ]
       },
       "cycle": {
         "available": true,
         "cycle_start": "2013-01-01",
-        "trend_cagr": 0.17964497544210523,
-        "avg_cycle_years": 3.9178082191780823,
-        "avg_rise_days": 1004.0,
-        "avg_fall_days": 426.0,
-        "avg_rise_months": 33.0,
-        "avg_fall_months": 14.0,
+        "trend_cagr": 0.17966501413414293,
+        "avg_cycle_years": 4.013698630136986,
+        "avg_rise_days": 1061.0,
+        "avg_fall_days": 404.0,
+        "avg_rise_months": 34.9,
+        "avg_fall_months": 13.3,
         "peaks": [
           {
-            "date": "2021-10-31",
+            "date": "2021-11-19",
             "type": "peak",
-            "residual": 0.25723645942774787,
-            "price": 15698.06615162176
+            "residual": 0.3028193657485456,
+            "price": 16573.33984375
           }
         ],
         "troughs": [
           {
-            "date": "2019-01-31",
+            "date": "2018-12-24",
             "type": "trough",
-            "residual": -0.11178824128139123,
-            "price": 6889.940680443577
+            "residual": -0.2498336129543013,
+            "price": 5899.35009765625
           },
           {
-            "date": "2022-12-31",
+            "date": "2022-12-28",
             "type": "trough",
-            "residual": -0.23400806021603757,
-            "price": 11647.80281276097
+            "residual": -0.31955026467848846,
+            "price": 10679.33984375
           }
         ],
         "transitions": [
           {
             "kind": "rise",
-            "days": 1004,
-            "months": 33.0,
-            "from_date": "2019-01-31",
-            "to_date": "2021-10-31",
-            "from_price": 6889.940680443577,
-            "to_price": 15698.06615162176
+            "days": 1061,
+            "months": 34.9,
+            "from_date": "2018-12-24",
+            "to_date": "2021-11-19",
+            "from_price": 5899.35009765625,
+            "to_price": 16573.33984375
           },
           {
             "kind": "fall",
-            "days": 426,
-            "months": 14.0,
-            "from_date": "2021-10-31",
-            "to_date": "2022-12-31",
-            "from_price": 15698.06615162176,
-            "to_price": 11647.80281276097
+            "days": 404,
+            "months": 13.3,
+            "from_date": "2021-11-19",
+            "to_date": "2022-12-28",
+            "from_price": 16573.33984375,
+            "to_price": 10679.33984375
           }
         ],
         "projections": [
           {
             "type": "trough",
-            "date": "2026-11-30",
-            "price": 23653.29379724619,
-            "phase_days": 426
+            "date": "2027-01-01",
+            "price": 21463.52159499618,
+            "phase_days": 404
           }
         ],
-        "years_since_last_peak": 4.627397260273972,
-        "years_since_last_trough": 3.4602739726027396
+        "years_since_last_peak": 4.578082191780822,
+        "years_since_last_trough": 3.4712328767123286
       },
       "realized_volatility": {
-        "full_history": 0.26361123614791515,
-        "last_3y": 0.20070917610916048,
-        "last_1y": 0.17607162278793764,
-        "forward_estimate": 0.20070917610916048,
+        "full_history": 0.26360261537860025,
+        "last_3y": 0.20076794347717725,
+        "last_1y": 0.17606883145289293,
+        "forward_estimate": 0.20076794347717725,
         "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
       },
       "charts": [
@@ -414,265 +414,265 @@ window.INDEX_DATA = {
       "color": "#b46b1d",
       "fit": {
         "t0": "1994-05-04",
-        "a": 5.0854651308963765,
-        "b": 0.00024939976960049816,
-        "r2": 0.7172263291219713,
-        "sigma_log": 0.5304037929307607,
-        "cagr": 0.09530286701351609,
-        "rho1": 0.7740153170908892,
-        "half_life_years": 2.7058767798771743,
+        "a": 5.085094970456217,
+        "b": 0.0002494945131529713,
+        "r2": 0.7172560113065586,
+        "sigma_log": 0.5306322175029893,
+        "cagr": 0.09534074477134413,
+        "rho1": 0.7740220554824395,
+        "half_life_years": 2.70596874224142,
         "fit_start": "1994-05-04",
-        "fit_end": "2026-06-16",
-        "n_points": 8084
+        "fit_end": "2026-06-17",
+        "n_points": 8085
       },
       "expected": {
-        "current_price": 13294.2197265625,
-        "trend_price_now": 3014,
-        "deviation_log": 1.4839,
-        "deviation_sigma": 2.8,
+        "current_price": 13477.072265625,
+        "trend_price_now": 3017,
+        "deviation_log": 1.4966,
+        "deviation_sigma": 2.82,
         "annual_by_horizon": {
-          "1": -0.2168,
-          "2": -0.1864,
-          "3": -0.1598,
-          "4": -0.1365,
-          "5": -0.116,
-          "6": -0.0979,
-          "7": -0.082,
-          "8": -0.0681,
-          "9": -0.0557,
-          "10": -0.0448,
-          "11": -0.0351,
-          "12": -0.0265,
-          "13": -0.0188,
-          "14": -0.0119,
-          "15": -0.0057
+          "1": -0.219,
+          "2": -0.1884,
+          "3": -0.1617,
+          "4": -0.1382,
+          "5": -0.1175,
+          "6": -0.0994,
+          "7": -0.0834,
+          "8": -0.0693,
+          "9": -0.0569,
+          "10": -0.0459,
+          "11": -0.0361,
+          "12": -0.0274,
+          "13": -0.0197,
+          "14": -0.0127,
+          "15": -0.0065
         },
         "paths": [
           {
             "year": 2027,
             "horizon": 1,
-            "price": 10413,
-            "annual_return": -0.2168
+            "price": 10526,
+            "annual_return": -0.219
           },
           {
             "year": 2028,
             "horizon": 2,
-            "price": 8800,
-            "annual_return": -0.1864
+            "price": 8876,
+            "annual_return": -0.1884
           },
           {
             "year": 2029,
             "horizon": 3,
-            "price": 7884,
-            "annual_return": -0.1598
+            "price": 7940,
+            "annual_return": -0.1617
           },
           {
             "year": 2030,
             "horizon": 4,
-            "price": 7392,
-            "annual_return": -0.1365
+            "price": 7434,
+            "annual_return": -0.1382
           },
           {
             "year": 2031,
             "horizon": 5,
-            "price": 7178,
-            "annual_return": -0.116
+            "price": 7212,
+            "annual_return": -0.1175
           },
           {
             "year": 2032,
             "horizon": 6,
-            "price": 7165,
-            "annual_return": -0.0979
+            "price": 7193,
+            "annual_return": -0.0994
           },
           {
             "year": 2033,
             "horizon": 7,
-            "price": 7302,
-            "annual_return": -0.082
+            "price": 7326,
+            "annual_return": -0.0834
           },
           {
             "year": 2034,
             "horizon": 8,
-            "price": 7563,
-            "annual_return": -0.0681
+            "price": 7586,
+            "annual_return": -0.0693
           },
           {
             "year": 2035,
             "horizon": 9,
-            "price": 7934,
-            "annual_return": -0.0557
+            "price": 7954,
+            "annual_return": -0.0569
           },
           {
             "year": 2036,
             "horizon": 10,
-            "price": 8406,
-            "annual_return": -0.0448
+            "price": 8426,
+            "annual_return": -0.0459
           },
           {
             "year": 2037,
             "horizon": 11,
-            "price": 8972,
-            "annual_return": -0.0351
+            "price": 8992,
+            "annual_return": -0.0361
           },
           {
             "year": 2038,
             "horizon": 12,
-            "price": 9633,
-            "annual_return": -0.0265
+            "price": 9652,
+            "annual_return": -0.0274
           },
           {
             "year": 2039,
             "horizon": 13,
-            "price": 10388,
-            "annual_return": -0.0188
+            "price": 10408,
+            "annual_return": -0.0197
           },
           {
             "year": 2040,
             "horizon": 14,
-            "price": 11245,
-            "annual_return": -0.0119
+            "price": 11266,
+            "annual_return": -0.0127
           },
           {
             "year": 2041,
             "horizon": 15,
-            "price": 12203,
-            "annual_return": -0.0057
+            "price": 12225,
+            "annual_return": -0.0065
           }
         ]
       },
       "cycle": {
         "available": true,
         "cycle_start": "2013-01-01",
-        "trend_cagr": 0.2415027491300621,
-        "avg_cycle_years": 3.0292237442922376,
-        "avg_rise_days": 751.3333333333334,
-        "avg_fall_days": 354.3333333333333,
-        "avg_rise_months": 24.7,
-        "avg_fall_months": 11.6,
+        "trend_cagr": 0.24160187043252068,
+        "avg_cycle_years": 3.053881278538813,
+        "avg_rise_days": 831.3333333333334,
+        "avg_fall_days": 283.3333333333333,
+        "avg_rise_months": 27.3,
+        "avg_fall_months": 9.3,
         "peaks": [
           {
-            "date": "2018-01-31",
+            "date": "2018-03-12",
             "type": "peak",
-            "residual": 0.10421836934511415,
-            "price": 1331.629633274829
+            "residual": 0.16278368823833134,
+            "price": 1445.9000244140625
           },
           {
-            "date": "2021-10-31",
+            "date": "2021-12-27",
             "type": "peak",
-            "residual": 0.2785012169750155,
-            "price": 3568.138461113606
+            "residual": 0.3684389571541171,
+            "price": 4039.510009765625
           },
           {
-            "date": "2024-05-31",
+            "date": "2024-07-10",
             "type": "peak",
-            "residual": 0.08163395387579836,
-            "price": 5124.635369676365
+            "residual": 0.19902724457640275,
+            "price": 5904.5400390625
           }
         ],
         "troughs": [
           {
-            "date": "2016-03-31",
+            "date": "2016-02-11",
             "type": "trough",
-            "residual": -0.22801154127936893,
-            "price": 641.7834703567029
+            "residual": -0.3366409103149257,
+            "price": 559.1799926757812
           },
           {
-            "date": "2018-12-31",
+            "date": "2018-12-24",
             "type": "trough",
-            "residual": -0.1625398523871216,
-            "price": 1243.0837649957143
+            "residual": -0.30901737295990905,
+            "price": 1069.3900146484375
           },
           {
-            "date": "2022-11-30",
+            "date": "2022-10-14",
             "type": "trough",
-            "residual": -0.2734170613574073,
-            "price": 2596.665747266022
+            "residual": -0.42903171008040264,
+            "price": 2162.320068359375
           },
           {
-            "date": "2025-04-30",
+            "date": "2025-04-08",
             "type": "trough",
-            "residual": -0.1995485334856571,
-            "price": 4715.367372580146
+            "residual": -0.4673725153184076,
+            "price": 3562.93994140625
           }
         ],
         "transitions": [
           {
             "kind": "rise",
-            "days": 671,
-            "months": 22.0,
-            "from_date": "2016-03-31",
-            "to_date": "2018-01-31",
-            "from_price": 641.7834703567029,
-            "to_price": 1331.629633274829
+            "days": 760,
+            "months": 25.0,
+            "from_date": "2016-02-11",
+            "to_date": "2018-03-12",
+            "from_price": 559.1799926757812,
+            "to_price": 1445.9000244140625
           },
           {
             "kind": "fall",
-            "days": 334,
-            "months": 11.0,
-            "from_date": "2018-01-31",
-            "to_date": "2018-12-31",
-            "from_price": 1331.629633274829,
-            "to_price": 1243.0837649957143
+            "days": 287,
+            "months": 9.4,
+            "from_date": "2018-03-12",
+            "to_date": "2018-12-24",
+            "from_price": 1445.9000244140625,
+            "to_price": 1069.3900146484375
           },
           {
             "kind": "rise",
-            "days": 1035,
-            "months": 34.0,
-            "from_date": "2018-12-31",
-            "to_date": "2021-10-31",
-            "from_price": 1243.0837649957143,
-            "to_price": 3568.138461113606
+            "days": 1099,
+            "months": 36.1,
+            "from_date": "2018-12-24",
+            "to_date": "2021-12-27",
+            "from_price": 1069.3900146484375,
+            "to_price": 4039.510009765625
           },
           {
             "kind": "fall",
-            "days": 395,
-            "months": 13.0,
-            "from_date": "2021-10-31",
-            "to_date": "2022-11-30",
-            "from_price": 3568.138461113606,
-            "to_price": 2596.665747266022
+            "days": 291,
+            "months": 9.6,
+            "from_date": "2021-12-27",
+            "to_date": "2022-10-14",
+            "from_price": 4039.510009765625,
+            "to_price": 2162.320068359375
           },
           {
             "kind": "rise",
-            "days": 548,
-            "months": 18.0,
-            "from_date": "2022-11-30",
-            "to_date": "2024-05-31",
-            "from_price": 2596.665747266022,
-            "to_price": 5124.635369676365
+            "days": 635,
+            "months": 20.9,
+            "from_date": "2022-10-14",
+            "to_date": "2024-07-10",
+            "from_price": 2162.320068359375,
+            "to_price": 5904.5400390625
           },
           {
             "kind": "fall",
-            "days": 334,
-            "months": 11.0,
-            "from_date": "2024-05-31",
-            "to_date": "2025-04-30",
-            "from_price": 5124.635369676365,
-            "to_price": 4715.367372580146
+            "days": 272,
+            "months": 8.9,
+            "from_date": "2024-07-10",
+            "to_date": "2025-04-08",
+            "from_price": 5904.5400390625,
+            "to_price": 3562.93994140625
           }
         ],
         "projections": [
           {
             "type": "peak",
-            "date": "2027-05-21",
-            "price": 9971.038755073152,
-            "phase_days": 751
+            "date": "2027-07-18",
+            "price": 11355.154135284969,
+            "phase_days": 831
           },
           {
             "type": "trough",
-            "date": "2028-05-09",
-            "price": 8948.53284379355,
-            "phase_days": 354
+            "date": "2028-04-26",
+            "price": 7505.185243245538,
+            "phase_days": 283
           }
         ],
-        "years_since_last_peak": 2.043835616438356,
-        "years_since_last_trough": 1.1287671232876713
+        "years_since_last_peak": 1.936986301369863,
+        "years_since_last_trough": 1.1917808219178083
       },
       "realized_volatility": {
-        "full_history": 0.37705926845027726,
-        "last_3y": 0.373441042138299,
-        "last_1y": 0.37694274879953776,
-        "forward_estimate": 0.373441042138299,
+        "full_history": 0.37704301285653163,
+        "last_3y": 0.37346233465901024,
+        "last_1y": 0.3768802720050706,
+        "forward_estimate": 0.37346233465901024,
         "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
       },
       "charts": [
