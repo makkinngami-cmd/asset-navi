@@ -215,6 +215,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
           株価指数トレンド
         </button>
+        <button type="button" onclick="location.href='https://makkinngami-cmd.github.io/asset-simulator/'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          資産形成シミュレーター
+        </button>
       </nav>
       <div class="sidebar-note">
         伝統資産とBTCを同じリスク地図で比べる配分設計ツール。<br>
@@ -557,6 +561,37 @@
 
       // Chart
       drawChart(result);
+
+      // 設定をPC側（localStorage）に保存
+      saveState();
+    }
+
+    // ── 設定の保存・復元（資産形成シミュレーターと同じlocalStorage方式） ──────
+    const STORAGE_KEY = 'asset-navi-v1';
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (s.preset && PRESETS[s.preset]) state.preset = s.preset;
+        if (typeof s.btcPct === 'number') state.btcPct = s.btcPct;
+        if (typeof s.horizon === 'number') state.horizon = s.horizon;
+        if (typeof s.initialAmount === 'number' && s.initialAmount > 0) state.initialAmount = s.initialAmount;
+        if (s.enabled && typeof s.enabled === 'object') {
+          Object.keys(state.enabled).forEach(k => {
+            if (typeof s.enabled[k] === 'boolean') state.enabled[k] = s.enabled[k];
+          });
+        }
+        // 画面の入力欄を復元した値に同期
+        document.querySelectorAll('.preset-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.preset === state.preset));
+        document.getElementById('btcSlider').value = state.btcPct;
+        document.getElementById('horizonSlider').value = state.horizon;
+        document.getElementById('initialAmount').value = state.initialAmount;
+      } catch (e) {}
     }
 
     function renderAssetUniverse() {
@@ -848,6 +883,7 @@
     });
 
     // ── Init ───────────────────────────────────────────────────────────────
+    loadState();          // PC側に保存された設定を復元
     renderAssetUniverse();
     render();
   </script>
