@@ -1,7 +1,7 @@
 window.INDEX_DATA = {
   "model": "株価指数 指数トレンドモデル",
   "disclaimer": "本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。",
-  "generated_at": "2026-06-17 10:54 UTC",
+  "generated_at": "2026-06-17 11:07 UTC",
   "indices": {
     "ndx": {
       "label": "NASDAQ100",
@@ -137,44 +137,44 @@ window.INDEX_DATA = {
       },
       "cycle": {
         "available": true,
-        "cycle_start": "2010-01-01",
-        "trend_cagr": 0.1773775125992847,
-        "avg_cycle_years": 6.673972602739726,
-        "avg_rise_days": 2010.0,
+        "cycle_start": "2013-01-01",
+        "trend_cagr": 0.17964497544210523,
+        "avg_cycle_years": 3.9178082191780823,
+        "avg_rise_days": 1004.0,
         "avg_fall_days": 426.0,
-        "avg_rise_months": 66.0,
+        "avg_rise_months": 33.0,
         "avg_fall_months": 14.0,
         "peaks": [
           {
             "date": "2021-10-31",
             "type": "peak",
-            "residual": 0.2580729687604892,
-            "price": 15696.813977494665
+            "residual": 0.25723645942774787,
+            "price": 15698.06615162176
           }
         ],
         "troughs": [
           {
-            "date": "2016-04-30",
+            "date": "2019-01-31",
             "type": "trough",
-            "residual": -0.11747744072861388,
-            "price": 4387.223554535488
+            "residual": -0.11178824128139123,
+            "price": 6889.940680443577
           },
           {
             "date": "2022-12-31",
             "type": "trough",
-            "residual": -0.2309259674958116,
-            "price": 11646.874065980757
+            "residual": -0.23400806021603757,
+            "price": 11647.80281276097
           }
         ],
         "transitions": [
           {
             "kind": "rise",
-            "days": 2010,
-            "months": 66.0,
-            "from_date": "2016-04-30",
+            "days": 1004,
+            "months": 33.0,
+            "from_date": "2019-01-31",
             "to_date": "2021-10-31",
-            "from_price": 4387.223554535488,
-            "to_price": 15696.813977494665
+            "from_price": 6889.940680443577,
+            "to_price": 15698.06615162176
           },
           {
             "kind": "fall",
@@ -182,21 +182,15 @@ window.INDEX_DATA = {
             "months": 14.0,
             "from_date": "2021-10-31",
             "to_date": "2022-12-31",
-            "from_price": 15696.813977494665,
-            "to_price": 11646.874065980757
+            "from_price": 15698.06615162176,
+            "to_price": 11647.80281276097
           }
         ],
         "projections": [
           {
-            "type": "peak",
-            "date": "2028-07-02",
-            "price": 46676.812982177864,
-            "phase_days": 2010
-          },
-          {
             "type": "trough",
-            "date": "2029-09-01",
-            "price": 36655.07379255995,
+            "date": "2026-11-30",
+            "price": 23653.29379724619,
             "phase_days": 426
           }
         ],
@@ -349,98 +343,68 @@ window.INDEX_DATA = {
       },
       "cycle": {
         "available": true,
-        "cycle_start": "2010-01-01",
-        "trend_cagr": 0.22120373315502828,
-        "avg_cycle_years": 3.084246575342466,
-        "avg_rise_days": 715.25,
-        "avg_fall_days": 410.5,
-        "avg_rise_months": 23.5,
-        "avg_fall_months": 13.5,
+        "cycle_start": "2013-01-01",
+        "trend_cagr": 0.2415027491300621,
+        "avg_cycle_years": 3.0292237442922376,
+        "avg_rise_days": 751.3333333333334,
+        "avg_fall_days": 354.3333333333333,
+        "avg_rise_months": 24.7,
+        "avg_fall_months": 11.6,
         "peaks": [
-          {
-            "date": "2014-07-31",
-            "type": "peak",
-            "residual": -0.0018531479623805735,
-            "price": 627.1083472783815
-          },
           {
             "date": "2018-01-31",
             "type": "peak",
-            "residual": 0.04966406408390626,
-            "price": 1330.6661003499296
+            "residual": 0.10421836934511415,
+            "price": 1331.629633274829
           },
           {
-            "date": "2021-11-30",
+            "date": "2021-10-31",
             "type": "peak",
-            "residual": 0.28670303951050113,
-            "price": 3627.9558103549157
+            "residual": 0.2785012169750155,
+            "price": 3568.138461113606
           },
           {
             "date": "2024-05-31",
             "type": "peak",
-            "residual": 0.13153491939143244,
-            "price": 5121.091389445216
+            "residual": 0.08163395387579836,
+            "price": 5124.635369676365
           }
         ],
         "troughs": [
           {
-            "date": "2012-12-31",
-            "type": "trough",
-            "residual": -0.15254610709417402,
-            "price": 393.2791237333966
-          },
-          {
             "date": "2016-03-31",
             "type": "trough",
-            "residual": -0.31282337520249304,
-            "price": 641.3503219170506
+            "residual": -0.22801154127936893,
+            "price": 641.7834703567029
           },
           {
             "date": "2018-12-31",
             "type": "trough",
-            "residual": -0.2019515503238723,
-            "price": 1242.2554116034369
+            "residual": -0.1625398523871216,
+            "price": 1243.0837649957143
           },
           {
             "date": "2022-11-30",
             "type": "trough",
-            "residual": -0.24821706864611434,
-            "price": 2594.9993929456773
+            "residual": -0.2734170613574073,
+            "price": 2596.665747266022
           },
           {
             "date": "2025-04-30",
             "type": "trough",
-            "residual": -0.13451654000003985,
-            "price": 4712.321607773478
+            "residual": -0.1995485334856571,
+            "price": 4715.367372580146
           }
         ],
         "transitions": [
-          {
-            "kind": "rise",
-            "days": 577,
-            "months": 19.0,
-            "from_date": "2012-12-31",
-            "to_date": "2014-07-31",
-            "from_price": 393.2791237333966,
-            "to_price": 627.1083472783815
-          },
-          {
-            "kind": "fall",
-            "days": 609,
-            "months": 20.0,
-            "from_date": "2014-07-31",
-            "to_date": "2016-03-31",
-            "from_price": 627.1083472783815,
-            "to_price": 641.3503219170506
-          },
           {
             "kind": "rise",
             "days": 671,
             "months": 22.0,
             "from_date": "2016-03-31",
             "to_date": "2018-01-31",
-            "from_price": 641.3503219170506,
-            "to_price": 1330.6661003499296
+            "from_price": 641.7834703567029,
+            "to_price": 1331.629633274829
           },
           {
             "kind": "fall",
@@ -448,26 +412,26 @@ window.INDEX_DATA = {
             "months": 11.0,
             "from_date": "2018-01-31",
             "to_date": "2018-12-31",
-            "from_price": 1330.6661003499296,
-            "to_price": 1242.2554116034369
+            "from_price": 1331.629633274829,
+            "to_price": 1243.0837649957143
           },
           {
             "kind": "rise",
-            "days": 1065,
-            "months": 35.0,
+            "days": 1035,
+            "months": 34.0,
             "from_date": "2018-12-31",
-            "to_date": "2021-11-30",
-            "from_price": 1242.2554116034369,
-            "to_price": 3627.9558103549157
+            "to_date": "2021-10-31",
+            "from_price": 1243.0837649957143,
+            "to_price": 3568.138461113606
           },
           {
             "kind": "fall",
-            "days": 365,
-            "months": 12.0,
-            "from_date": "2021-11-30",
+            "days": 395,
+            "months": 13.0,
+            "from_date": "2021-10-31",
             "to_date": "2022-11-30",
-            "from_price": 3627.9558103549157,
-            "to_price": 2594.9993929456773
+            "from_price": 3568.138461113606,
+            "to_price": 2596.665747266022
           },
           {
             "kind": "rise",
@@ -475,8 +439,8 @@ window.INDEX_DATA = {
             "months": 18.0,
             "from_date": "2022-11-30",
             "to_date": "2024-05-31",
-            "from_price": 2594.9993929456773,
-            "to_price": 5121.091389445216
+            "from_price": 2596.665747266022,
+            "to_price": 5124.635369676365
           },
           {
             "kind": "fall",
@@ -484,22 +448,22 @@ window.INDEX_DATA = {
             "months": 11.0,
             "from_date": "2024-05-31",
             "to_date": "2025-04-30",
-            "from_price": 5121.091389445216,
-            "to_price": 4712.321607773478
+            "from_price": 5124.635369676365,
+            "to_price": 4715.367372580146
           }
         ],
         "projections": [
           {
             "type": "peak",
-            "date": "2027-04-15",
-            "price": 8729.938501225484,
-            "phase_days": 715
+            "date": "2027-05-21",
+            "price": 9971.038755073152,
+            "phase_days": 751
           },
           {
             "type": "trough",
-            "date": "2028-05-29",
-            "price": 8155.412075487791,
-            "phase_days": 410
+            "date": "2028-05-09",
+            "price": 8948.53284379355,
+            "phase_days": 354
           }
         ],
         "years_since_last_peak": 2.043835616438356,
