@@ -1,7 +1,7 @@
 window.INDEX_DATA = {
   "model": "株価指数 指数トレンドモデル",
   "disclaimer": "本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。",
-  "generated_at": "2026-06-17 22:48 UTC",
+  "generated_at": "2026-06-18 11:39 UTC",
   "indices": {
     "spx": {
       "label": "S&P500",
@@ -208,19 +208,19 @@ window.INDEX_DATA = {
       "color": "#2364aa",
       "fit": {
         "t0": "1990-01-02",
-        "a": 5.688270191818522,
-        "b": 0.0003086363243138068,
-        "r2": 0.9006980830021086,
-        "sigma_log": 0.3940846825283078,
-        "cagr": 0.11924265800777811,
-        "rho1": 0.7695050472686843,
-        "half_life_years": 2.6455215035458632,
+        "a": 5.688270191804203,
+        "b": 0.00030863632431703844,
+        "r2": 0.9006980829998514,
+        "sigma_log": 0.3940846825374065,
+        "cagr": 0.11924265800909817,
+        "rho1": 0.7695050472647098,
+        "half_life_years": 2.6455215034937116,
         "fit_start": "1990-01-02",
         "fit_end": "2026-06-17",
         "n_points": 9182
       },
       "expected": {
-        "current_price": 29670.947265625,
+        "current_price": 29670.94921875,
         "trend_price_now": 17993,
         "deviation_log": 0.5002,
         "deviation_sigma": 1.27,
@@ -263,7 +263,7 @@ window.INDEX_DATA = {
           {
             "year": 2030,
             "horizon": 4,
-            "price": 33659,
+            "price": 33660,
             "annual_return": 0.032
           },
           {
@@ -337,7 +337,7 @@ window.INDEX_DATA = {
       "cycle": {
         "available": true,
         "cycle_start": "2013-01-01",
-        "trend_cagr": 0.17966501413414293,
+        "trend_cagr": 0.17966501414437652,
         "avg_cycle_years": 4.013698630136986,
         "avg_rise_days": 1061.0,
         "avg_fall_days": 404.0,
@@ -347,7 +347,7 @@ window.INDEX_DATA = {
           {
             "date": "2021-11-19",
             "type": "peak",
-            "residual": 0.3028193657485456,
+            "residual": 0.3028193657103575,
             "price": 16573.33984375
           }
         ],
@@ -355,13 +355,13 @@ window.INDEX_DATA = {
           {
             "date": "2018-12-24",
             "type": "trough",
-            "residual": -0.2498336129543013,
+            "residual": -0.24983361296727224,
             "price": 5899.35009765625
           },
           {
             "date": "2022-12-28",
             "type": "trough",
-            "residual": -0.31955026467848846,
+            "residual": -0.3195502647262778,
             "price": 10679.33984375
           }
         ],
@@ -389,7 +389,7 @@ window.INDEX_DATA = {
           {
             "type": "trough",
             "date": "2027-01-01",
-            "price": 21463.52159499618,
+            "price": 21463.521596117207,
             "phase_days": 404
           }
         ],
@@ -397,10 +397,10 @@ window.INDEX_DATA = {
         "years_since_last_trough": 3.4712328767123286
       },
       "realized_volatility": {
-        "full_history": 0.26360261537860025,
-        "last_3y": 0.20076794347717725,
-        "last_1y": 0.17606883145289293,
-        "forward_estimate": 0.20076794347717725,
+        "full_history": 0.2636026153066465,
+        "last_3y": 0.20076794228511952,
+        "last_1y": 0.17606882722868086,
+        "forward_estimate": 0.20076794228511952,
         "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
       },
       "charts": [
@@ -414,19 +414,19 @@ window.INDEX_DATA = {
       "color": "#b46b1d",
       "fit": {
         "t0": "1994-05-04",
-        "a": 5.085094970456217,
-        "b": 0.0002494945131529713,
-        "r2": 0.7172560113065586,
-        "sigma_log": 0.5306322175029893,
-        "cagr": 0.09534074477134413,
-        "rho1": 0.7740220554824395,
-        "half_life_years": 2.70596874224142,
+        "a": 5.085094970492045,
+        "b": 0.00024949451314380117,
+        "r2": 0.7172560113302936,
+        "sigma_log": 0.5306322174524346,
+        "cagr": 0.09534074476767795,
+        "rho1": 0.774022055525039,
+        "half_life_years": 2.7059687428228147,
         "fit_start": "1994-05-04",
         "fit_end": "2026-06-17",
         "n_points": 8085
       },
       "expected": {
-        "current_price": 13477.072265625,
+        "current_price": 13477.0703125,
         "trend_price_now": 3017,
         "deviation_log": 1.4966,
         "deviation_sigma": 2.82,
@@ -543,7 +543,7 @@ window.INDEX_DATA = {
       "cycle": {
         "available": true,
         "cycle_start": "2013-01-01",
-        "trend_cagr": 0.24160187043252068,
+        "trend_cagr": 0.2416018704088092,
         "avg_cycle_years": 3.053881278538813,
         "avg_rise_days": 831.3333333333334,
         "avg_fall_days": 283.3333333333333,
@@ -553,19 +553,19 @@ window.INDEX_DATA = {
           {
             "date": "2018-03-12",
             "type": "peak",
-            "residual": 0.16278368823833134,
+            "residual": 0.16278368825187162,
             "price": 1445.9000244140625
           },
           {
             "date": "2021-12-27",
             "type": "peak",
-            "residual": 0.3684389571541171,
+            "residual": 0.3684389572401754,
             "price": 4039.510009765625
           },
           {
             "date": "2024-07-10",
             "type": "peak",
-            "residual": 0.19902724457640275,
+            "residual": 0.19902724471091204,
             "price": 5904.5400390625
           }
         ],
@@ -573,25 +573,25 @@ window.INDEX_DATA = {
           {
             "date": "2016-02-11",
             "type": "trough",
-            "residual": -0.3366409103149257,
+            "residual": -0.33664091034115007,
             "price": 559.1799926757812
           },
           {
             "date": "2018-12-24",
             "type": "trough",
-            "residual": -0.30901737295990905,
+            "residual": -0.30901737293135145,
             "price": 1069.3900146484375
           },
           {
             "date": "2022-10-14",
             "type": "trough",
-            "residual": -0.42903171008040264,
+            "residual": -0.42903170997911655,
             "price": 2162.320068359375
           },
           {
             "date": "2025-04-08",
             "type": "trough",
-            "residual": -0.4673725153184076,
+            "residual": -0.46737251516966616,
             "price": 3562.93994140625
           }
         ],
@@ -655,13 +655,13 @@ window.INDEX_DATA = {
           {
             "type": "peak",
             "date": "2027-07-18",
-            "price": 11355.154135284969,
+            "price": 11355.15413462964,
             "phase_days": 831
           },
           {
             "type": "trough",
             "date": "2028-04-26",
-            "price": 7505.185243245538,
+            "price": 7505.185241973436,
             "phase_days": 283
           }
         ],
@@ -669,10 +669,10 @@ window.INDEX_DATA = {
         "years_since_last_trough": 1.1917808219178083
       },
       "realized_volatility": {
-        "full_history": 0.37704301285653163,
-        "last_3y": 0.37346233465901024,
-        "last_1y": 0.3768802720050706,
-        "forward_estimate": 0.37346233465901024,
+        "full_history": 0.3770430126998471,
+        "last_3y": 0.3734623331101511,
+        "last_1y": 0.37688026817380177,
+        "forward_estimate": 0.3734623331101511,
         "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
       },
       "charts": [
@@ -686,137 +686,137 @@ window.INDEX_DATA = {
       "ticker": "^N225",
       "color": "#0b8f6a",
       "fit": {
-        "t0": "1990-01-04",
-        "a": 9.534983106478363,
-        "b": 3.520281408947588e-05,
-        "r2": 0.1011062717658946,
-        "sigma_log": 0.4034215426571575,
-        "cagr": 0.012931930587595897,
-        "rho1": 0.8416848056748341,
-        "half_life_years": 4.021749278366315,
-        "fit_start": "1990-01-04",
-        "fit_end": "2026-06-16",
-        "n_points": 8944
+        "t0": "2013-01-04",
+        "a": 9.482267910220369,
+        "b": 0.00024488490349902414,
+        "r2": 0.9048971512299584,
+        "sigma_log": 0.11267779625587752,
+        "cagr": 0.09349937522070673,
+        "rho1": -0.08076370181417197,
+        "half_life_years": 3.0,
+        "fit_start": "2013-01-04",
+        "fit_end": "2026-06-18",
+        "n_points": 3288
       },
       "expected": {
-        "current_price": 69404.5,
-        "trend_price_now": 22106,
-        "deviation_log": 1.1441,
-        "deviation_sigma": 2.84,
+        "current_price": 71053.4921875,
+        "trend_price_now": 43712,
+        "deviation_log": 0.4858,
+        "deviation_sigma": 4.31,
         "annual_by_horizon": {
-          "1": -0.1549,
-          "2": -0.1427,
-          "3": -0.1316,
-          "4": -0.1216,
-          "5": -0.1125,
-          "6": -0.1042,
-          "7": -0.0967,
-          "8": -0.0898,
-          "9": -0.0836,
-          "10": -0.0779,
-          "11": -0.0727,
-          "12": -0.068,
-          "13": -0.0637,
-          "14": -0.0597,
-          "15": -0.056
+          "1": -0.0108,
+          "2": -0.0004,
+          "3": 0.0085,
+          "4": 0.0163,
+          "5": 0.0231,
+          "6": 0.0292,
+          "7": 0.0344,
+          "8": 0.039,
+          "9": 0.0431,
+          "10": 0.0468,
+          "11": 0.05,
+          "12": 0.0528,
+          "13": 0.0554,
+          "14": 0.0577,
+          "15": 0.0598
         },
         "paths": [
           {
             "year": 2027,
             "horizon": 1,
-            "price": 58655,
-            "annual_return": -0.1549
+            "price": 70288,
+            "annual_return": -0.0108
           },
           {
             "year": 2028,
             "horizon": 2,
-            "price": 51014,
-            "annual_return": -0.1427
+            "price": 71000,
+            "annual_return": -0.0004
           },
           {
             "year": 2029,
             "horizon": 3,
-            "price": 45451,
-            "annual_return": -0.1316
+            "price": 72888,
+            "annual_return": 0.0085
           },
           {
             "year": 2030,
             "horizon": 4,
-            "price": 41325,
-            "annual_return": -0.1216
+            "price": 75808,
+            "annual_return": 0.0163
           },
           {
             "year": 2031,
             "horizon": 5,
-            "price": 38222,
-            "annual_return": -0.1125
+            "price": 79663,
+            "annual_return": 0.0231
           },
           {
             "year": 2032,
             "horizon": 6,
-            "price": 35866,
-            "annual_return": -0.1042
+            "price": 84426,
+            "annual_return": 0.0292
           },
           {
             "year": 2033,
             "horizon": 7,
-            "price": 34064,
-            "annual_return": -0.0967
+            "price": 90035,
+            "annual_return": 0.0344
           },
           {
             "year": 2034,
             "horizon": 8,
-            "price": 32684,
-            "annual_return": -0.0898
+            "price": 96515,
+            "annual_return": 0.039
           },
           {
             "year": 2035,
             "horizon": 9,
-            "price": 31630,
-            "annual_return": -0.0836
+            "price": 103886,
+            "annual_return": 0.0431
           },
           {
             "year": 2036,
             "horizon": 10,
-            "price": 30833,
-            "annual_return": -0.0779
+            "price": 112212,
+            "annual_return": 0.0468
           },
           {
             "year": 2037,
             "horizon": 11,
-            "price": 30239,
-            "annual_return": -0.0727
+            "price": 121490,
+            "annual_return": 0.05
           },
           {
             "year": 2038,
             "horizon": 12,
-            "price": 29808,
-            "annual_return": -0.068
+            "price": 131805,
+            "annual_return": 0.0528
           },
           {
             "year": 2039,
             "horizon": 13,
-            "price": 29510,
-            "annual_return": -0.0637
+            "price": 143229,
+            "annual_return": 0.0554
           },
           {
             "year": 2040,
             "horizon": 14,
-            "price": 29322,
-            "annual_return": -0.0597
+            "price": 155882,
+            "annual_return": 0.0577
           },
           {
             "year": 2041,
             "horizon": 15,
-            "price": 29223,
-            "annual_return": -0.056
+            "price": 169786,
+            "annual_return": 0.0598
           }
         ]
       },
       "cycle": {
         "available": true,
         "cycle_start": "2013-01-01",
-        "trend_cagr": 0.09335745621860592,
+        "trend_cagr": 0.09349937522070673,
         "avg_cycle_years": 2.9287671232876713,
         "avg_rise_days": 456.0,
         "avg_fall_days": 613.0,
@@ -826,19 +826,19 @@ window.INDEX_DATA = {
           {
             "date": "2015-06-24",
             "type": "peak",
-            "residual": 0.24280359750693137,
+            "residual": 0.24306435978219554,
             "price": 20868.029296875
           },
           {
             "date": "2018-01-23",
             "type": "peak",
-            "residual": 0.1569630721477715,
+            "residual": 0.15688815144207346,
             "price": 24124.150390625
           },
           {
             "date": "2021-02-16",
             "type": "peak",
-            "residual": 0.1165455656830705,
+            "residual": 0.11607237703385742,
             "price": 30467.75
           }
         ],
@@ -846,19 +846,19 @@ window.INDEX_DATA = {
           {
             "date": "2016-06-24",
             "type": "trough",
-            "residual": -0.1800660415565769,
+            "residual": -0.17993542755571035,
             "price": 14952.01953125
           },
           {
             "date": "2020-03-19",
             "type": "trough",
-            "residual": -0.41189330398190727,
+            "residual": -0.41224772344082083,
             "price": 16552.830078125
           },
           {
             "date": "2023-01-04",
             "type": "trough",
-            "residual": -0.22096803182357228,
+            "residual": -0.22168551518456603,
             "price": 25716.859375
           }
         ],
@@ -910,14 +910,14 @@ window.INDEX_DATA = {
           }
         ],
         "projections": [],
-        "years_since_last_peak": 5.331506849315068,
-        "years_since_last_trough": 3.4493150684931506
+        "years_since_last_peak": 5.336986301369863,
+        "years_since_last_trough": 3.4547945205479453
       },
       "realized_volatility": {
-        "full_history": 0.2360498690191231,
-        "last_3y": 0.2473112194787317,
-        "last_1y": 0.2529640622178716,
-        "forward_estimate": 0.2473112194787317,
+        "full_history": 0.23604226366071243,
+        "last_3y": 0.2474308879672453,
+        "last_1y": 0.25326275744182525,
+        "forward_estimate": 0.2474308879672453,
         "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
       },
       "charts": [
@@ -932,12 +932,12 @@ window.INDEX_DATA = {
       "color": "#bd3b3b",
       "fit": {
         "t0": "2008-03-28",
-        "a": 3.198664840782655,
-        "b": 0.00024773415144552214,
-        "r2": 0.9510821007518739,
-        "sigma_log": 0.1079466441467564,
-        "cagr": 0.09463717932236326,
-        "rho1": -0.235026907881096,
+        "a": 3.198664840885993,
+        "b": 0.0002477341519573004,
+        "r2": 0.9510821003705455,
+        "sigma_log": 0.10794664481213354,
+        "cagr": 0.09463717952684036,
+        "rho1": -0.2350269301905646,
         "half_life_years": 3.0,
         "fit_start": "2008-03-28",
         "fit_end": "2026-06-17",
@@ -1061,7 +1061,7 @@ window.INDEX_DATA = {
       "cycle": {
         "available": true,
         "cycle_start": "2013-01-01",
-        "trend_cagr": 0.09698213141156065,
+        "trend_cagr": 0.09698213084972762,
         "avg_cycle_years": 3.335616438356164,
         "avg_rise_days": 679.5,
         "avg_fall_days": 538.0,
@@ -1071,34 +1071,34 @@ window.INDEX_DATA = {
           {
             "date": "2018-01-26",
             "type": "peak",
-            "residual": 0.11181670507554298,
-            "price": 66.36087799072266
+            "residual": 0.11181681618468442,
+            "price": 66.36088562011719
           },
           {
             "date": "2021-12-27",
             "type": "peak",
-            "residual": 0.1423268259048296,
-            "price": 98.34828186035156
+            "residual": 0.14232674647840415,
+            "price": 98.34827423095703
           }
         ],
         "troughs": [
           {
             "date": "2016-02-11",
             "type": "trough",
-            "residual": -0.1979192028092096,
+            "residual": -0.19791920767159654,
             "price": 40.611446380615234
           },
           {
             "date": "2020-03-23",
             "type": "trough",
-            "residual": -0.39807687316245177,
-            "price": 48.65696334838867
+            "residual": -0.398076954317081,
+            "price": 48.656959533691406
           },
           {
             "date": "2022-10-12",
             "type": "trough",
-            "residual": -0.23629443944235096,
-            "price": 72.47077178955078
+            "residual": -0.23629423033706587,
+            "price": 72.47078704833984
           }
         ],
         "transitions": [
@@ -1109,7 +1109,7 @@ window.INDEX_DATA = {
             "from_date": "2016-02-11",
             "to_date": "2018-01-26",
             "from_price": 40.611446380615234,
-            "to_price": 66.36087799072266
+            "to_price": 66.36088562011719
           },
           {
             "kind": "fall",
@@ -1117,8 +1117,8 @@ window.INDEX_DATA = {
             "months": 25.9,
             "from_date": "2018-01-26",
             "to_date": "2020-03-23",
-            "from_price": 66.36087799072266,
-            "to_price": 48.65696334838867
+            "from_price": 66.36088562011719,
+            "to_price": 48.656959533691406
           },
           {
             "kind": "rise",
@@ -1126,8 +1126,8 @@ window.INDEX_DATA = {
             "months": 21.2,
             "from_date": "2020-03-23",
             "to_date": "2021-12-27",
-            "from_price": 48.65696334838867,
-            "to_price": 98.34828186035156
+            "from_price": 48.656959533691406,
+            "to_price": 98.34827423095703
           },
           {
             "kind": "fall",
@@ -1135,8 +1135,8 @@ window.INDEX_DATA = {
             "months": 9.5,
             "from_date": "2021-12-27",
             "to_date": "2022-10-12",
-            "from_price": 98.34828186035156,
-            "to_price": 72.47077178955078
+            "from_price": 98.34827423095703,
+            "to_price": 72.47078704833984
           }
         ],
         "projections": [],
@@ -1144,10 +1144,10 @@ window.INDEX_DATA = {
         "years_since_last_trough": 3.682191780821918
       },
       "realized_volatility": {
-        "full_history": 0.20224388338645644,
-        "last_3y": 0.14453894123462108,
-        "last_1y": 0.13460265984640968,
-        "forward_estimate": 0.14453894123462108,
+        "full_history": 0.20224395760566352,
+        "last_3y": 0.1445388982764889,
+        "last_1y": 0.13460266109380567,
+        "forward_estimate": 0.1445388982764889,
         "note": "年率換算（営業日252日）。資産配分のリスク指標に使用。"
       },
       "charts": [

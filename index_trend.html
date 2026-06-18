@@ -146,8 +146,19 @@
         </div>`;
     }
 
+    // 日経225固有の注記（2013年起点の理由＋円安の再現性）
+    const regimeNote = key === 'nk225' ? `
+      <div class="notice warn" style="margin:0 0 16px">
+        <strong>日経225は2013年（アベノミクス）以降で当てはめています。</strong>
+        1989年バブル天井から2012年までは「失われた30年」のデフレ局面で、全期間で引くとトレンドが崩れます（R²≈0.10）。
+        そのため2012年末の構造転換点以降だけを使用（R²≈0.90）。
+        ただし2013年以降の上昇は<strong>円安（76→約160円/ドル）とデフレ脱却という再現性の低い要因</strong>に支えられた面があり、CAGR約9%をそのまま将来に当てはめるのは楽観的です。
+        現在は<strong>2013年トレンドに対しても+4σ超と全指数で最も割高</strong>で、回帰シナリオではこの割高分が将来リターンを大きく押し下げます。
+      </div>` : '';
+
     const html = `
       <h2 style="color:${ix.color}">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
+      ${regimeNote}
       <div class="panel">
         <div class="panel-head">モデルの要点</div>
         <div class="panel-body">
