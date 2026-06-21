@@ -217,6 +217,17 @@
         <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
         <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
       </div>
+      ${ix.charts[2] ? `<div class="panel">
+        <div class="panel-head">③ BTC比較（パフォーマンス＋半減期サイクル）</div>
+        <img src="${ix.charts[2]}" alt="${ix.label} vs BTC" />
+        <div class="panel-body" style="border-top:1px solid var(--line)">
+          <p style="font-size:12px;color:var(--muted);line-height:1.7;">
+            オレンジ＝BTC、色付き＝${ix.label}を同じ起点で指数化（=100）して比較。
+            <strong>オレンジ点線＝BTC半減期</strong>：${ix.label}もBTCの半減期サイクルに連動する傾向があります。
+            灰色点線（右軸）は${ix.label}/BTC比率で、100を下回るとBTCに負けている期間。
+          </p>
+        </div>
+      </div>` : ''}
       <div class="panel">
         <div class="panel-head">将来の年率リターン — 2つのシナリオ</div>
         <div class="panel-body">
