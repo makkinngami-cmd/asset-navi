@@ -217,17 +217,21 @@
         <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
         <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
       </div>
-      ${ix.charts[2] ? `<div class="panel">
-        <div class="panel-head">③ BTC比較（パフォーマンス＋半減期サイクル）</div>
-        <img src="${ix.charts[2]}" alt="${ix.label} vs BTC" />
-        <div class="panel-body" style="border-top:1px solid var(--line)">
-          <p style="font-size:12px;color:var(--muted);line-height:1.7;">
-            オレンジ＝BTC、色付き＝${ix.label}を同じ起点で指数化（=100）して比較。
-            <strong>オレンジ点線＝BTC半減期</strong>：${ix.label}もBTCの半減期サイクルに連動する傾向があります。
-            灰色点線（右軸）は${ix.label}/BTC比率で、100を下回るとBTCに負けている期間。
+      <div class="panel">
+        <div class="panel-head">③ BTC比較（起点スライダーで変更可）</div>
+        <div class="panel-body">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+            <label style="font-size:13px;color:var(--muted)">比較の起点：</label>
+            <input type="range" id="slider-${key}" style="flex:1;min-width:200px" />
+            <span id="slider-label-${key}" style="font-size:13px;font-weight:700;min-width:80px"></span>
+          </div>
+          <canvas id="canvas-${key}" width="1100" height="500" style="width:100%;height:auto;display:block"></canvas>
+          <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:8px;">
+            オレンジ＝BTC、色付き＝${ix.label}を起点で指数化（=100）。
+            <strong>オレンジ点線＝BTC半減期</strong>。スライダーで起点を変えると勝ち負けが変わります。
           </p>
         </div>
-      </div>` : ''}
+      </div>
       <div class="panel">
         <div class="panel-head">将来の年率リターン — 2つのシナリオ</div>
         <div class="panel-body">
@@ -247,6 +251,144 @@
       </div>
     `;
     altContainer.insertAdjacentHTML('beforeend', html2);
+  });
+
+  // === インタラクティブ比較チャート ===
+  const btcW = (d.btc_weekly_prices || []).map(r => ({d: new Date(r[0]), p: r[1]}));
+  const halvDates = (d.halvings || []).map(h => new Date(h));
+
+  function drawComparison(canvasId, altKey, altLabel, altColor) {
+    const altData = alts[altKey];
+    if (!altData || !altData.weekly_prices) return;
+    const altW = altData.weekly_prices.map(r => ({d: new Date(r[0]), p: r[1]}));
+    const slider = document.getElementById('slider-' + altKey);
+    const sliderLabel = document.getElementById('slider-label-' + altKey);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !slider) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const PAD = {l:70, r:80, t:30, b:40};
+
+    // 共通の日付範囲を算出
+    const commonStart = Math.max(btcW[0].d.getTime(), altW[0].d.getTime());
+    const commonEnd = Math.min(btcW[btcW.length-1].d.getTime(), altW[altW.length-1].d.getTime());
+    const btcFiltered = btcW.filter(r => r.d.getTime() >= commonStart && r.d.getTime() <= commonEnd);
+    const altFiltered = altW.filter(r => r.d.getTime() >= commonStart && r.d.getTime() <= commonEnd);
+    if (btcFiltered.length < 5 || altFiltered.length < 5) return;
+
+    slider.min = 0;
+    slider.max = Math.max(0, btcFiltered.length - 20);
+    slider.value = 0;
+
+    function render() {
+      const startIdx = parseInt(slider.value);
+      const startDate = btcFiltered[startIdx].d;
+      sliderLabel.textContent = startDate.toISOString().slice(0,7);
+
+      const btcFrom = btcFiltered.slice(startIdx);
+      const altFrom = altFiltered.filter(r => r.d >= startDate);
+      if (btcFrom.length < 2 || altFrom.length < 2) return;
+
+      const btcBase = btcFrom[0].p, altBase = altFrom[0].p;
+      const btcNorm = btcFrom.map(r => ({d: r.d, v: r.p / btcBase * 100}));
+      const altNorm = altFrom.map(r => ({d: r.d, v: r.p / altBase * 100}));
+
+      const tMin = startDate.getTime();
+      const tMax = btcFrom[btcFrom.length-1].d.getTime();
+      const allVals = btcNorm.map(r=>r.v).concat(altNorm.map(r=>r.v));
+      const vMin = Math.max(1, Math.min(...allVals) * 0.8);
+      const vMax = Math.max(...allVals) * 1.1;
+      const logMin = Math.log10(vMin), logMax = Math.log10(vMax);
+
+      const tx = t => PAD.l + (t - tMin) / (tMax - tMin) * (W - PAD.l - PAD.r);
+      const ty = v => PAD.t + (1 - (Math.log10(Math.max(1,v)) - logMin) / (logMax - logMin)) * (H - PAD.t - PAD.b);
+
+      ctx.clearRect(0, 0, W, H);
+
+      // BTC半減期帯
+      halvDates.forEach(hd => {
+        const ht = hd.getTime();
+        if (ht >= tMin && ht <= tMax) {
+          const hx = tx(ht);
+          ctx.strokeStyle = 'rgba(247,147,26,0.4)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4,4]);
+          ctx.beginPath(); ctx.moveTo(hx, PAD.t); ctx.lineTo(hx, H-PAD.b); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = 'rgba(247,147,26,0.5)';
+          ctx.font = '9px sans-serif';
+          ctx.save(); ctx.translate(hx-3, PAD.t+8); ctx.rotate(-Math.PI/2);
+          ctx.fillText('半減期', 0, 0); ctx.restore();
+        }
+      });
+
+      // 100ライン
+      if (logMin < 2 && logMax > 2) {
+        const y100 = ty(100);
+        ctx.strokeStyle = '#d8e0e4'; ctx.lineWidth = 1;
+        ctx.setLineDash([6,3]);
+        ctx.beginPath(); ctx.moveTo(PAD.l, y100); ctx.lineTo(W-PAD.r, y100); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#66737d'; ctx.font = '10px sans-serif';
+        ctx.fillText('起点=100', PAD.l+4, y100-4);
+      }
+
+      // グリッド（対数目盛）
+      ctx.strokeStyle = '#eef0f2'; ctx.lineWidth = 0.5;
+      for (let e = Math.floor(logMin); e <= Math.ceil(logMax); e++) {
+        const gv = Math.pow(10, e);
+        if (gv >= vMin && gv <= vMax) {
+          const gy = ty(gv);
+          ctx.beginPath(); ctx.moveTo(PAD.l, gy); ctx.lineTo(W-PAD.r, gy); ctx.stroke();
+          ctx.fillStyle = '#66737d'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+          ctx.fillText(gv >= 1000 ? (gv/1000)+'k' : gv.toFixed(0), PAD.l-6, gy+4);
+        }
+      }
+
+      // 年ラベル
+      ctx.fillStyle = '#66737d'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      const startYear = new Date(tMin).getFullYear();
+      const endYear = new Date(tMax).getFullYear();
+      for (let yr = startYear; yr <= endYear; yr++) {
+        const yt = new Date(yr, 0, 1).getTime();
+        if (yt >= tMin && yt <= tMax) {
+          const yx = tx(yt);
+          ctx.fillText(yr.toString(), yx, H - PAD.b + 16);
+        }
+      }
+
+      // BTC線
+      ctx.strokeStyle = '#f7931a'; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
+      ctx.beginPath();
+      btcNorm.forEach((r, i) => { const x = tx(r.d.getTime()), y = ty(r.v); i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+      ctx.stroke(); ctx.globalAlpha = 1;
+
+      // ALT線
+      ctx.strokeStyle = altColor; ctx.lineWidth = 2;
+      ctx.beginPath();
+      altNorm.forEach((r, i) => { const x = tx(r.d.getTime()), y = ty(r.v); i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+      ctx.stroke();
+
+      // 現在の倍率ラベル
+      const btcLast = btcNorm[btcNorm.length-1], altLast = altNorm[altNorm.length-1];
+      ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillStyle = '#f7931a';
+      ctx.fillText('BTC x' + (btcLast.v/100).toFixed(1), tx(btcLast.d.getTime())+6, ty(btcLast.v));
+      ctx.fillStyle = altColor;
+      ctx.fillText(altLabel.split(' ')[0] + ' x' + (altLast.v/100).toFixed(1), tx(altLast.d.getTime())+6, ty(altLast.v)+14);
+
+      // 枠
+      ctx.strokeStyle = '#d8e0e4'; ctx.lineWidth = 1;
+      ctx.strokeRect(PAD.l, PAD.t, W-PAD.l-PAD.r, H-PAD.t-PAD.b);
+    }
+
+    slider.addEventListener('input', render);
+    render();
+  }
+
+  Object.keys(alts).forEach(key => {
+    const a = alts[key];
+    drawComparison('canvas-' + key, key, a.label, a.color);
   });
 
   document.getElementById('caveat').innerHTML =
