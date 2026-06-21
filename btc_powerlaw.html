@@ -194,7 +194,7 @@
             <div class="metric">
               <div class="metric-label">現在のトレンド乖離</div>
               <div class="metric-value ${devClass}">${devSig >= 0 ? '+' : ''}${devSig.toFixed(1)}σ（${devWord}）</div>
-              <div class="metric-sub">現在 $${num2(exp2.current_price)} / 線 $${num2(exp2.trend_price_now)}</div>
+              <div class="metric-sub">現在 $${exp2.current_price >= 1 ? num2(exp2.current_price) : exp2.current_price.toFixed(4)} / 線 $${exp2.trend_price_now >= 1 ? num2(exp2.trend_price_now) : exp2.trend_price_now.toFixed(4)}</div>
             </div>
             <div class="metric">
               <div class="metric-label">10年期待リターン（年率）</div>
