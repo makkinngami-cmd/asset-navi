@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BTC パワーロー予測 — アセットナビ</title>
+  <title>暗号資産トレンド解析 — アセットナビ</title>
   <style>
     :root {
       --bg: #f6f7f9; --panel: #ffffff; --ink: #172026; --muted: #66737d;
@@ -46,8 +46,8 @@
 <body>
 <main>
   <a class="back" href="index.html">← アセットナビに戻る</a>
-  <h1 style="margin-top:8px">BTC パワーロー予測</h1>
-  <p class="subtitle">過去価格を両対数で直線当てはめし、将来の年率リターン（逓減）と標準偏差の<strong>参考値</strong>を出します。アセットナビのBTC前提に使います。</p>
+  <h1 style="margin-top:8px">暗号資産トレンド解析</h1>
+  <p class="subtitle">暗号資産ごとに最適なモデルで長期トレンドを当てはめ、将来の年率リターンと標準偏差の<strong>参考値</strong>を出します。BTCはパワーロー（べき乗則）、ETH・XRPは指数トレンド（log-linear）を使用。</p>
 
   <!-- サマリー -->
   <div class="panel">
@@ -105,6 +105,8 @@
     </div>
   </div>
 
+  <div id="alt-container"></div>
+
   <div class="notice warn" id="caveat"></div>
   <div class="notice" id="disclaimer" style="margin-top:10px"></div>
 </main>
@@ -151,6 +153,87 @@
       `<td>${usd(r.model_price)}</td>` +
       `<td class="bar-cell"><span class="ret-bar" style="width:${w}px"></span></td>`;
     body.appendChild(tr);
+  });
+
+  // === アルトコインセクション ===
+  const alts = d.altcoins || {};
+  const altContainer = document.getElementById('alt-container');
+  const pct2  = v => (v * 100).toFixed(1) + '%';
+  const pctn2 = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%';
+  const num2  = v => Math.round(v).toLocaleString();
+
+  Object.keys(alts).forEach(key => {
+    const ix = alts[key];
+    const fit2 = ix.fit, exp2 = ix.expected, vol2 = ix.realized_volatility;
+    const devSig = exp2.deviation_sigma;
+    const devClass = devSig > 1.5 ? 'red' : (devSig < -1.0 ? 'green' : 'btc');
+    const devWord = devSig > 1.5 ? '割高' : (devSig < -1.0 ? '割安' : '中立');
+
+    const hs = [1, 3, 5, 10, 15];
+    let rows2 = '';
+    hs.forEach(h => {
+      const p2 = exp2.paths.find(x => x.horizon === h);
+      if (!p2) return;
+      const rRev = p2.annual_return, rStr = fit2.cagr;
+      rows2 += `<tr><td>${h}年</td><td class="${rRev < 0 ? 'red' : 'green'}">${pctn2(rRev)}</td><td class="${rStr < 0 ? 'red' : 'green'}">${pctn2(rStr)}</td></tr>`;
+    });
+
+    const html2 = `
+      <h2 style="color:${ix.color};margin-top:32px">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
+      <div class="panel">
+        <div class="panel-head">モデルの要点（指数トレンド）</div>
+        <div class="panel-body">
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">長期トレンド成長率（CAGR）</div>
+              <div class="metric-value">${pct2(fit2.cagr)}</div>
+              <div class="metric-sub">${fit2.fit_start.slice(0,4)}〜 R²=${fit2.r2.toFixed(2)}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">現在のトレンド乖離</div>
+              <div class="metric-value ${devClass}">${devSig >= 0 ? '+' : ''}${devSig.toFixed(1)}σ（${devWord}）</div>
+              <div class="metric-sub">現在 $${num2(exp2.current_price)} / 線 $${num2(exp2.trend_price_now)}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">10年期待リターン（年率）</div>
+              <div class="metric-value">${pctn2(exp2.annual_by_horizon['10'])} 〜 ${pctn2(fit2.cagr)}</div>
+              <div class="metric-sub">回帰 〜 構造再評価の幅</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">標準偏差（年率）</div>
+              <div class="metric-value">${pct2(vol2.forward_estimate)}</div>
+              <div class="metric-sub">全期間${pct2(vol2.full_history)} → 直近3年${pct2(vol2.last_3y)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">① 指数トレンド＋σチャンネル（対数スケール）</div>
+        <img src="${ix.charts[0]}" alt="${ix.label} トレンド" />
+      </div>
+      <div class="panel">
+        <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
+        <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
+      </div>
+      <div class="panel">
+        <div class="panel-head">将来の年率リターン — 2つのシナリオ</div>
+        <div class="panel-body">
+          <table>
+            <thead><tr>
+              <th>投資期間</th>
+              <th>回帰シナリオ<br><span style="font-weight:400;font-size:11px;color:var(--muted)">旧トレンドに戻る（慎重）</span></th>
+              <th>構造再評価シナリオ<br><span style="font-weight:400;font-size:11px;color:var(--muted)">トレンド自体が上方シフト（強気）</span></th>
+            </tr></thead>
+            <tbody>${rows2}</tbody>
+          </table>
+          <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:12px;">
+            <strong>回帰シナリオ</strong>＝現在の${devSig >= 0 ? '+' : ''}${devSig.toFixed(1)}σの乖離が半減期${fit2.half_life_years.toFixed(1)}年で縮小し、過去のトレンド線に戻る前提。
+            <strong>構造再評価シナリオ</strong>＝現在価格が新しい正常として長期CAGR（${pct2(fit2.cagr)}）で伸びる前提。
+          </p>
+        </div>
+      </div>
+    `;
+    altContainer.insertAdjacentHTML('beforeend', html2);
   });
 
   document.getElementById('caveat').innerHTML =
