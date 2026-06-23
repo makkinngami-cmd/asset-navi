@@ -359,16 +359,19 @@
 
     // Covariance matrix
     // Asset order: ['global_equity', 'us_bond', 'gold', 'reit', 'btc', 'cash']
+    // 7x7 covariance matrix (annualized, 2018-2026 daily returns)
+    // Order: global_equity, sp500, us_bond, gold, reit, btc, cash
     const COV = [
-      [ 0.031085,  0.001703,  0.001397,  0.025931,  0.026940, -0.0000008],
-      [ 0.001703,  0.004219,  0.000487,  0.002940,  0.002337,  0.0000027],
-      [ 0.001397,  0.000487,  0.022249,  0.004295,  0.008799, -0.0000062],
-      [ 0.025931,  0.002940,  0.004295,  0.050851,  0.022760, -0.0000005],
-      [ 0.026940,  0.002337,  0.008799,  0.022760,  0.259591,  0.0000291],
-      [-0.0000008, 0.0000027,-0.0000062,-0.0000005, 0.0000291,  0.000128 ]
+      [ 0.032568, 0.033395, 0.002559, 0.006473, 0.027909, 0.038212,-0.000027],
+      [ 0.033395, 0.036106, 0.002216, 0.004545, 0.029127, 0.037742,-0.000031],
+      [ 0.002559, 0.002216, 0.003350, 0.003152, 0.004487, 0.004872, 0.000036],
+      [ 0.006473, 0.004545, 0.003152, 0.027886, 0.006106, 0.012970, 0.000067],
+      [ 0.027909, 0.029127, 0.004487, 0.006106, 0.044356, 0.028754, 0.000008],
+      [ 0.038212, 0.037742, 0.004872, 0.012970, 0.028754, 0.336760,-0.000015],
+      [-0.000027,-0.000031, 0.000036, 0.000067, 0.000008,-0.000015, 0.000008]
     ];
 
-    const BTC_IDX = 4;
+    const BTC_IDX = 5;
 
     // BTC volatility: use wave_residual (deviation from wave model) if available,
     // otherwise fall back to last_3y realized vol. wave_residual is the correct
@@ -392,6 +395,7 @@
     // Static expected returns; BTC is overridden dynamically from BTC_DATA
     const BASE_RETURNS = {
       global_equity: 0.05,
+      sp500:         0.072,
       us_bond:       0.015,
       gold:          0.02,
       reit:          0.04,
@@ -399,35 +403,36 @@
       cash:          0.001
     };
 
-    const ASSET_KEYS = ['global_equity', 'us_bond', 'gold', 'reit', 'btc', 'cash'];
+    const ASSET_KEYS = ['global_equity', 'sp500', 'us_bond', 'gold', 'reit', 'btc', 'cash'];
 
     // Preset base weights (btc=0 in base; added via slider)
     const PRESETS = {
       conservative: {
         label: '保守',
         desc: '債券・現金中心。値動きが小さく安定重視。',
-        weights: { global_equity: 0.20, us_bond: 0.45, gold: 0.10, reit: 0.05, btc: 0.0, cash: 0.20 }
+        weights: { global_equity: 0.15, sp500: 0.05, us_bond: 0.45, gold: 0.10, reit: 0.05, btc: 0.0, cash: 0.20 }
       },
       balanced: {
         label: '標準',
         desc: '株式と債券をバランスよく組み合わせた標準的な構成。',
-        weights: { global_equity: 0.45, us_bond: 0.25, gold: 0.10, reit: 0.10, btc: 0.0, cash: 0.10 }
+        weights: { global_equity: 0.30, sp500: 0.15, us_bond: 0.25, gold: 0.10, reit: 0.10, btc: 0.0, cash: 0.10 }
       },
       growth: {
         label: '積極',
         desc: '株式中心。高リターン狙いで、値動きも大きい。',
-        weights: { global_equity: 0.60, us_bond: 0.10, gold: 0.08, reit: 0.12, btc: 0.0, cash: 0.10 }
+        weights: { global_equity: 0.40, sp500: 0.20, us_bond: 0.10, gold: 0.08, reit: 0.12, btc: 0.0, cash: 0.10 }
       }
     };
 
     // Asset chart info (risk = sqrt(COV[i][i]), in %)
     const ASSET_INFO = [
-      { key: 'global_equity', label: '全世界株', color: '#2364aa', risk: 17.63, baseRet: 5.0  },
-      { key: 'us_bond',       label: '米国債券', color: '#0b8f6a', risk:  6.50, baseRet: 1.5  },
-      { key: 'gold',          label: '金',       color: '#b46b1d', risk: 14.92, baseRet: 2.0  },
-      { key: 'reit',          label: 'REIT',     color: '#6f5aa8', risk: 22.55, baseRet: 4.0  },
-      { key: 'btc',           label: 'BTC',      color: '#bd3b3b', risk: 47.0,  baseRet: 25.0 },
-      { key: 'cash',          label: '現金',     color: '#75838a', risk:  1.13, baseRet: 0.1  }
+      { key: 'global_equity', label: '全世界株', color: '#2364aa', risk: 18.05, baseRet: 5.0  },
+      { key: 'sp500',         label: 'S&P500',   color: '#6b3fa0', risk: 19.00, baseRet: 7.2  },
+      { key: 'us_bond',       label: '米国債券', color: '#0b8f6a', risk:  5.79, baseRet: 1.5  },
+      { key: 'gold',          label: '金',       color: '#b46b1d', risk: 16.70, baseRet: 2.0  },
+      { key: 'reit',          label: 'REIT',     color: '#6f5aa8', risk: 21.06, baseRet: 4.0  },
+      { key: 'btc',           label: 'BTC',      color: '#bd3b3b', risk: 58.03, baseRet: 25.0 },
+      { key: 'cash',          label: '現金',     color: '#75838a', risk:  0.28, baseRet: 0.1  }
     ];
 
     // ── App state ──────────────────────────────────────────────────────────
@@ -436,7 +441,7 @@
       btcPct: 0,
       horizon: 10,
       initialAmount: 100,   // 万円
-      enabled: { global_equity: true, us_bond: true, gold: true, reit: true, cash: true }
+      enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true, cash: true }
     };
 
     // ── Core computation ───────────────────────────────────────────────────
