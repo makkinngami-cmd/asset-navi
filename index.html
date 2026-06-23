@@ -249,6 +249,7 @@
               <span><i class="dot" style="background:#75838a"></i>単体資産</span>
               <span><i class="dot" style="background:#0b8f6a"></i>選択ポートフォリオ</span>
               <span><i class="dot" style="background:#bd3b3b"></i>BTC（期間別リターン）</span>
+              <span><i class="dot" style="background:#d98324"></i>資本市場線・最大シャープ★</span>
             </div>
           </div>
         </div>
@@ -729,6 +730,18 @@
       return envelope;
     }
 
+    // Draw a 5-point star path (call ctx.fill()/stroke() after)
+    function drawStar(cx, cy, points, outer, inner) {
+      ctx.beginPath();
+      for (let i = 0; i < points * 2; i++) {
+        const r = i % 2 === 0 ? outer : inner;
+        const ang = (Math.PI / points) * i - Math.PI / 2;
+        const x = cx + r * Math.cos(ang), y = cy + r * Math.sin(ang);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+    }
+
     // Draw Catmull-Rom spline through screen points
     function drawSpline(screenPts) {
       if (screenPts.length < 2) return;
@@ -797,6 +810,49 @@
       ctx.strokeStyle = '#2364aa';
       ctx.lineWidth = 3.5;
       drawSpline(screenFrontier);
+
+      // ── Capital Market Line (CML) + tangency portfolio (max Sharpe) ──
+      // rf = 無リスク金利（現金のリターン）。フロンティア上で最大シャープの点が接点。
+      const rf = BASE_RETURNS.cash * 100;
+      let tangency = null, bestSharpe = -Infinity;
+      frontierPts.forEach(p => {
+        if (p.risk > 0.5) {
+          const sharpe = (p.ret - rf) / p.risk;
+          if (sharpe > bestSharpe) { bestSharpe = sharpe; tangency = p; }
+        }
+      });
+      if (tangency) {
+        const slope = (tangency.ret - rf) / tangency.risk;
+        // 接線をチャート端まで延長（リスク軸 or リターン軸の先に当たる方でクリップ）
+        let endRisk = axis.riskMax;
+        let endRet = rf + slope * endRisk;
+        if (endRet > axis.returnMax) { endRet = axis.returnMax; endRisk = (endRet - rf) / slope; }
+        ctx.strokeStyle = '#d98324';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([7, 5]);
+        ctx.beginPath();
+        ctx.moveTo(sx(0), sy(rf));
+        ctx.lineTo(sx(endRisk), sy(endRet));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // rf 点（縦軸上）
+        ctx.fillStyle = '#d98324';
+        ctx.beginPath(); ctx.arc(sx(0), sy(rf), 4, 0, Math.PI * 2); ctx.fill();
+        // 接点ポートフォリオ ★
+        const tx = sx(tangency.risk), ty = sy(tangency.ret);
+        ctx.fillStyle = '#d98324';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        drawStar(tx, ty, 5, 11, 5.5);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#9a5e10';
+        ctx.font = '700 11px Segoe UI, sans-serif';
+        const tlbl = `最大シャープ ${tangency.ret.toFixed(1)}%/${tangency.risk.toFixed(1)}%`;
+        const tlblW = ctx.measureText(tlbl).width;
+        const tlblX = tx + 12 + tlblW > canvas.width - AREA.right ? tx - 12 - tlblW : tx + 12;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(tlbl, tlblX, ty + 6);
+      }
 
       // Individual asset dots (hide disabled, hide BTC if btcPct=0)
       ASSET_INFO.forEach(a => {
