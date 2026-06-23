@@ -279,6 +279,14 @@
               </div>
               <div class="control-row">
                 <div class="control-meta">
+                  <label for="cashSlider">現金比率（無リスク資産）</label>
+                  <span class="value" id="cashValue">0%</span>
+                </div>
+                <input id="cashSlider" type="range" min="0" max="100" value="0" step="1" />
+                <div class="btc-hint" id="cashHint">現金を増やすとCML上を左下（守り）へ移動します。</div>
+              </div>
+              <div class="control-row">
+                <div class="control-meta">
                   <label for="horizonSlider">投資期間</label>
                   <span class="value" id="horizonValue">10年</span>
                 </div>
@@ -359,20 +367,20 @@
     // ── Real data from main.py (asset_navi_results.json) ──────────────────
 
     // Covariance matrix
-    // Asset order: ['global_equity', 'us_bond', 'gold', 'reit', 'btc', 'cash']
-    // 7x7 covariance matrix (annualized, 2018-2026 daily returns)
-    // Order: global_equity, sp500, us_bond, gold, reit, btc, cash
+    // 6x6 covariance matrix of RISKY assets (annualized, 2018-2026 daily returns)
+    // Order: global_equity, sp500, us_bond, gold, reit, btc
+    // 現金（無リスク資産）はフロンティアの材料ではなく、CMLの起点 rf として別扱い。
     const COV = [
-      [ 0.032568, 0.033395, 0.002559, 0.006473, 0.027909, 0.038212,-0.000027],
-      [ 0.033395, 0.036106, 0.002216, 0.004545, 0.029127, 0.037742,-0.000031],
-      [ 0.002559, 0.002216, 0.003350, 0.003152, 0.004487, 0.004872, 0.000036],
-      [ 0.006473, 0.004545, 0.003152, 0.027886, 0.006106, 0.012970, 0.000067],
-      [ 0.027909, 0.029127, 0.004487, 0.006106, 0.044356, 0.028754, 0.000008],
-      [ 0.038212, 0.037742, 0.004872, 0.012970, 0.028754, 0.336760,-0.000015],
-      [-0.000027,-0.000031, 0.000036, 0.000067, 0.000008,-0.000015, 0.000008]
+      [ 0.032568, 0.033395, 0.002559, 0.006473, 0.027909, 0.038212],
+      [ 0.033395, 0.036106, 0.002216, 0.004545, 0.029127, 0.037742],
+      [ 0.002559, 0.002216, 0.003350, 0.003152, 0.004487, 0.004872],
+      [ 0.006473, 0.004545, 0.003152, 0.027886, 0.006106, 0.012970],
+      [ 0.027909, 0.029127, 0.004487, 0.006106, 0.044356, 0.028754],
+      [ 0.038212, 0.037742, 0.004872, 0.012970, 0.028754, 0.336760]
     ];
 
     const BTC_IDX = 5;
+    const RF = 0.001;  // 無リスク金利（現金、年0.1%）＝CMLの起点
 
     // BTC volatility: use wave_residual (deviation from wave model) if available,
     // otherwise fall back to last_3y realized vol. wave_residual is the correct
@@ -400,28 +408,27 @@
       us_bond:       0.015,
       gold:          0.02,
       reit:          0.04,
-      btc:           0.25,  // placeholder
-      cash:          0.001
+      btc:           0.25  // placeholder
     };
 
-    const ASSET_KEYS = ['global_equity', 'sp500', 'us_bond', 'gold', 'reit', 'btc', 'cash'];
+    const ASSET_KEYS = ['global_equity', 'sp500', 'us_bond', 'gold', 'reit', 'btc'];
 
     // Preset base weights (btc=0 in base; added via slider)
     const PRESETS = {
       conservative: {
         label: '保守',
-        desc: '債券・現金中心。値動きが小さく安定重視。',
-        weights: { global_equity: 0.15, sp500: 0.05, us_bond: 0.45, gold: 0.10, reit: 0.05, btc: 0.0, cash: 0.20 }
+        desc: '債券中心のリスク資産構成。守りは現金比率で調整。',
+        weights: { global_equity: 0.19, sp500: 0.06, us_bond: 0.56, gold: 0.13, reit: 0.06, btc: 0.0 }
       },
       balanced: {
         label: '標準',
         desc: '株式と債券をバランスよく組み合わせた標準的な構成。',
-        weights: { global_equity: 0.30, sp500: 0.15, us_bond: 0.25, gold: 0.10, reit: 0.10, btc: 0.0, cash: 0.10 }
+        weights: { global_equity: 0.33, sp500: 0.17, us_bond: 0.28, gold: 0.11, reit: 0.11, btc: 0.0 }
       },
       growth: {
         label: '積極',
         desc: '株式中心。高リターン狙いで、値動きも大きい。',
-        weights: { global_equity: 0.40, sp500: 0.20, us_bond: 0.10, gold: 0.08, reit: 0.12, btc: 0.0, cash: 0.10 }
+        weights: { global_equity: 0.44, sp500: 0.22, us_bond: 0.11, gold: 0.09, reit: 0.14, btc: 0.0 }
       }
     };
 
@@ -432,17 +439,17 @@
       { key: 'us_bond',       label: '米国債券', color: '#0b8f6a', risk:  5.79, baseRet: 1.5  },
       { key: 'gold',          label: '金',       color: '#b46b1d', risk: 16.70, baseRet: 2.0  },
       { key: 'reit',          label: 'REIT',     color: '#6f5aa8', risk: 21.06, baseRet: 4.0  },
-      { key: 'btc',           label: 'BTC',      color: '#bd3b3b', risk: 58.03, baseRet: 25.0 },
-      { key: 'cash',          label: '現金',     color: '#75838a', risk:  0.28, baseRet: 0.1  }
+      { key: 'btc',           label: 'BTC',      color: '#bd3b3b', risk: 58.03, baseRet: 25.0 }
     ];
 
     // ── App state ──────────────────────────────────────────────────────────
     const state = {
       preset: 'balanced',
       btcPct: 0,
+      cashPct: 0,           // 現金（無リスク資産）比率＝CML上のどこに座るか
       horizon: 10,
       initialAmount: 100,   // 万円
-      enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true, cash: true }
+      enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true }
     };
 
     // ── Core computation ───────────────────────────────────────────────────
@@ -461,33 +468,42 @@
       const cov = COV.map(row => [...row]);
       cov[BTC_IDX][BTC_IDX] = BTC_VAR;
 
-      // Weights: apply enabled filter, add BTC, renormalize
+      // 1) リスク資産ポートフォリオ（現金を除く）の重み。BTC比率を加えて正規化。
       const btcFrac = state.btcPct / 100;
       const baseW   = PRESETS[state.preset].weights;
-      // Sum of enabled non-BTC base weights
       let baseSum = 0;
       ASSET_KEYS.forEach(k => { if (k !== 'btc' && state.enabled[k]) baseSum += (baseW[k] || 0); });
       const scale = baseSum > 0 ? (1 - btcFrac) / baseSum : 0;
-      const w = {};
+      const riskyW = {};  // リスク資産内の構成（合計1）
       ASSET_KEYS.forEach(k => {
-        if (k === 'btc') w[k] = btcFrac;
-        else w[k] = state.enabled[k] ? (baseW[k] || 0) * scale : 0;
+        if (k === 'btc') riskyW[k] = btcFrac;
+        else riskyW[k] = state.enabled[k] ? (baseW[k] || 0) * scale : 0;
       });
 
       // Expected returns with dynamic BTC
       const rets = { ...BASE_RETURNS, btc: btcReturn };
 
-      // Portfolio return (arithmetic)
-      let pRet = 0;
-      ASSET_KEYS.forEach(k => { pRet += w[k] * rets[k]; });
+      // リスク資産部分のリターン・分散
+      let riskyRet = 0;
+      ASSET_KEYS.forEach(k => { riskyRet += riskyW[k] * rets[k]; });
+      const wArr = ASSET_KEYS.map(k => riskyW[k]);
+      let riskyVar = 0;
+      for (let i = 0; i < ASSET_KEYS.length; i++)
+        for (let j = 0; j < ASSET_KEYS.length; j++)
+          riskyVar += wArr[i] * wArr[j] * cov[i][j];
+      const riskyVol = Math.sqrt(Math.max(0, riskyVar));
 
-      // Portfolio variance = w' * Cov * w
-      const wArr = ASSET_KEYS.map(k => w[k]);
-      let pVar = 0;
-      for (let i = 0; i < 6; i++)
-        for (let j = 0; j < 6; j++)
-          pVar += wArr[i] * wArr[j] * cov[i][j];
-      const pVol = Math.sqrt(Math.max(0, pVar));
+      // 2) 現金（無リスク資産）と混ぜる：CML上のどこに座るか
+      //    最終 = (1-cash)×リスク資産 + cash×rf。現金は分散≒0・無相関なので
+      //    最終リスク = (1-cash)×リスク資産のリスク、最終リターン = 加重平均。
+      const cashFrac = state.cashPct / 100;
+      const pRet = (1 - cashFrac) * riskyRet + cashFrac * RF;
+      const pVol = (1 - cashFrac) * riskyVol;
+
+      // 表示用の最終重み（現金を含む）
+      const w = {};
+      ASSET_KEYS.forEach(k => { w[k] = riskyW[k] * (1 - cashFrac); });
+      w.cash = cashFrac;
 
       // T-year lognormal range
       // Median  = initial × exp(T × (r − 0.5σ²))
@@ -502,8 +518,8 @@
       // Max drawdown estimate: ~2.2× annual vol (calibrated to reference portfolios)
       const drawdown = -2.2 * pVol;
 
-      // Sharpe (risk-free 0.1%)
-      const sharpe = pVol > 0 ? (pRet - 0.001) / pVol : 0;
+      // Sharpe (risk-free RF)
+      const sharpe = pVol > 0 ? (pRet - RF) / pVol : 0;
 
       return { w, pRet, pVol, sharpe, median, high, low, drawdown, btcReturn };
     }
@@ -520,6 +536,7 @@
 
       // Controls display
       document.getElementById('btcValue').textContent    = state.btcPct + '%';
+      document.getElementById('cashValue').textContent   = state.cashPct + '%';
       document.getElementById('horizonValue').textContent = state.horizon + '年';
 
       const btcHint = document.getElementById('btcHint');
@@ -549,6 +566,7 @@
       const p = PRESETS[state.preset];
       let msg = `${p.label}（${p.desc}）`;
       if (state.btcPct > 0) msg += ` BTC ${state.btcPct}%追加。`;
+      if (state.cashPct > 0) msg += ` 現金 ${state.cashPct}%で守りを調整。`;
       msg += ` 期待リターン ${(result.pRet * 100).toFixed(1)}%、リスク ${(result.pVol * 100).toFixed(1)}%。`;
       msg += ` ${state.horizon}年後の中央値は ${fmt万円(result.median)}（下振れ ${fmt万円(result.low)} 〜 上振れ ${fmt万円(result.high)}）。`;
       document.getElementById('insight').textContent = msg;
@@ -584,6 +602,7 @@
         const s = JSON.parse(raw);
         if (s.preset && PRESETS[s.preset]) state.preset = s.preset;
         if (typeof s.btcPct === 'number') state.btcPct = s.btcPct;
+        if (typeof s.cashPct === 'number') state.cashPct = s.cashPct;
         if (typeof s.horizon === 'number') state.horizon = s.horizon;
         if (typeof s.initialAmount === 'number' && s.initialAmount > 0) state.initialAmount = s.initialAmount;
         if (s.enabled && typeof s.enabled === 'object') {
@@ -595,6 +614,7 @@
         document.querySelectorAll('.preset-btn').forEach(b =>
           b.classList.toggle('active', b.dataset.preset === state.preset));
         document.getElementById('btcSlider').value = state.btcPct;
+        document.getElementById('cashSlider').value = state.cashPct;
         document.getElementById('horizonSlider').value = state.horizon;
         document.getElementById('initialAmount').value = state.initialAmount;
       } catch (e) {}
@@ -617,7 +637,8 @@
     function renderAllocations(w) {
       const root = document.getElementById('allocations');
       root.innerHTML = '';
-      ASSET_INFO.forEach(a => {
+      const rows = [...ASSET_INFO, { key: 'cash', label: '現金', color: '#75838a' }];
+      rows.forEach(a => {
         const pct = Math.round((w[a.key] || 0) * 100);
         if (pct === 0) return;
         const row = document.createElement('div');
@@ -659,8 +680,8 @@
       ASSET_KEYS.forEach(k => { pRet += w[k] * rets[k]; });
       const wArr = ASSET_KEYS.map(k => w[k]);
       let pVar = 0;
-      for (let i = 0; i < 6; i++)
-        for (let j = 0; j < 6; j++)
+      for (let i = 0; i < ASSET_KEYS.length; i++)
+        for (let j = 0; j < ASSET_KEYS.length; j++)
           pVar += wArr[i] * wArr[j] * cov[i][j];
       return { pRet, pVol: Math.sqrt(Math.max(0, pVar)) };
     }
@@ -813,7 +834,7 @@
 
       // ── Capital Market Line (CML) + tangency portfolio (max Sharpe) ──
       // rf = 無リスク金利（現金のリターン）。フロンティア上で最大シャープの点が接点。
-      const rf = BASE_RETURNS.cash * 100;
+      const rf = RF * 100;
       let tangency = null, bestSharpe = -Infinity;
       frontierPts.forEach(p => {
         if (p.risk > 0.5) {
@@ -917,6 +938,11 @@
 
     document.getElementById('btcSlider').addEventListener('input', e => {
       state.btcPct = Number(e.target.value);
+      render();
+    });
+
+    document.getElementById('cashSlider').addEventListener('input', e => {
+      state.cashPct = Number(e.target.value);
       render();
     });
 
