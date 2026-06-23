@@ -880,7 +880,9 @@
         if (a.key === 'btc' && state.btcPct === 0) return;
         if (a.key !== 'btc' && !state.enabled[a.key]) return;
         const ret = a.key === 'btc' ? btcRet100 : a.baseRet;
-        const px  = sx(a.risk), py = sy(ret);
+        // BTCのリスクはフロンティアと同じ波モデル残差ボラを使う（生の歴史ボラ58%ではなく）
+        const risk = a.key === 'btc' ? BTC_VOL * 100 : a.risk;
+        const px  = sx(risk), py = sy(ret);
         ctx.fillStyle   = '#ffffff';
         ctx.strokeStyle = a.color;
         ctx.lineWidth   = a.key === 'btc' ? 2.5 : 1.8;
