@@ -363,6 +363,25 @@
       <section class="lower" style="grid-template-columns:1fr">
         <div class="panel">
           <div class="panel-head">
+            <h2>モンテカルロ・シミュレーション（2000シナリオ）</h2>
+          </div>
+          <div class="panel-body">
+            <div class="control-row" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+              <label for="targetAmount" style="font-size:13px;color:#4d5a61">目標額（万円）</label>
+              <input id="targetAmount" type="number" min="10" max="1000000" value="200" step="10"
+                     style="width:140px" />
+              <span id="mcSuccess" style="font-size:13px;color:#4d5a61"></span>
+            </div>
+            <canvas id="mcChart" width="900" height="430" aria-label="モンテカルロ・ファンチャート"></canvas>
+            <p style="font-size:12px;color:#66737d;line-height:1.7;margin-top:10px;">
+              いまの配分で年率リターン・リスクをもとに<b>2000通りの将来</b>を試算（各年の損益を乱数で発生）。
+              濃い帯＝中位50%、薄い帯＝上下10〜90%の範囲。<b>同じ平均でも「順番」と「運」で結果は大きく散らばります</b>。
+              オレンジ点線＝目標額、左上＝その到達確率です。
+            </p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
             <h2>資産間の相関ヒートマップ</h2>
           </div>
           <div class="panel-body">
@@ -472,6 +491,7 @@
       cashPct: 0,           // 現金（無リスク資産）比率＝CML上のどこに座るか
       horizon: 10,
       initialAmount: 100,   // 万円
+      targetAmount: 200,    // 万円（モンテカルロの目標額）
       enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true }
     };
 
@@ -609,6 +629,14 @@
       // Chart
       drawChart(result);
 
+      // モンテカルロ
+      const mc = runMonteCarlo(result);
+      drawMcChart(mc);
+      document.getElementById('mcSuccess').innerHTML =
+        `目標 <b>${state.targetAmount.toLocaleString()}万円</b> の到達確率：` +
+        `<b style="color:#0b8f6a;font-size:16px">${Math.round(mc.successProb * 100)}%</b>` +
+        `<span style="color:#66737d">（${mc.N}回中 ${Math.round(mc.successProb * mc.N)}回）</span>`;
+
       // 設定をPC側（localStorage）に保存
       saveState();
     }
@@ -628,6 +656,7 @@
         if (typeof s.cashPct === 'number') state.cashPct = s.cashPct;
         if (typeof s.horizon === 'number') state.horizon = s.horizon;
         if (typeof s.initialAmount === 'number' && s.initialAmount > 0) state.initialAmount = s.initialAmount;
+        if (typeof s.targetAmount === 'number' && s.targetAmount > 0) state.targetAmount = s.targetAmount;
         if (s.enabled && typeof s.enabled === 'object') {
           Object.keys(state.enabled).forEach(k => {
             if (typeof s.enabled[k] === 'boolean') state.enabled[k] = s.enabled[k];
@@ -640,6 +669,7 @@
         document.getElementById('cashSlider').value = state.cashPct;
         document.getElementById('horizonSlider').value = state.horizon;
         document.getElementById('initialAmount').value = state.initialAmount;
+        document.getElementById('targetAmount').value = state.targetAmount;
       } catch (e) {}
     }
 
@@ -951,6 +981,142 @@
       ctx.fillText(lbl, lblX, py - 4);
     }
 
+    // ── モンテカルロ・シミュレーション ───────────────────────────────────────
+    const mcCanvas = document.getElementById('mcChart');
+    const mctx = mcCanvas.getContext('2d');
+
+    // 標準正規乱数（Box-Muller）
+    function gaussian() {
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function runMonteCarlo(result) {
+      const N = 2000;                 // シナリオ数
+      const T = state.horizon;
+      const initial = state.initialAmount;          // 万円
+      const target  = state.targetAmount;           // 万円
+      const r = result.pRet, s = result.pVol;
+      const m = r - 0.5 * s * s;       // 年次対数リターンの平均（中央値が exp(T·m) になる）
+
+      // 各年の値を保存（パスのサンプル描画用に一部だけ保持）
+      const SAMPLE = 30;
+      const samplePaths = [];
+      // 年ごとの全シナリオ値を集めてパーセンタイルを取る
+      const byYear = Array.from({ length: T + 1 }, () => new Float64Array(N));
+      for (let p = 0; p < N; p++) {
+        let v = initial;
+        byYear[0][p] = v;
+        const path = [v];
+        for (let t = 1; t <= T; t++) {
+          v *= Math.exp(m + s * gaussian());
+          byYear[t][p] = v;
+          path.push(v);
+        }
+        if (p < SAMPLE) samplePaths.push(path);
+      }
+
+      const pct = (arr, q) => {
+        const a = Array.from(arr).sort((x, y) => x - y);
+        const idx = Math.min(a.length - 1, Math.max(0, Math.round(q * (a.length - 1))));
+        return a[idx];
+      };
+      const p10 = [], p25 = [], p50 = [], p75 = [], p90 = [];
+      for (let t = 0; t <= T; t++) {
+        p10.push(pct(byYear[t], 0.10));
+        p25.push(pct(byYear[t], 0.25));
+        p50.push(pct(byYear[t], 0.50));
+        p75.push(pct(byYear[t], 0.75));
+        p90.push(pct(byYear[t], 0.90));
+      }
+      // 目標到達確率（最終年の値が目標以上の割合）
+      let hit = 0;
+      for (let p = 0; p < N; p++) if (byYear[T][p] >= target) hit++;
+      const successProb = hit / N;
+
+      return { T, p10, p25, p50, p75, p90, samplePaths, successProb, N, target };
+    }
+
+    function drawMcChart(mc) {
+      const W = mcCanvas.width, H = mcCanvas.height;
+      const A = { left: 76, right: 110, top: 24, bottom: 40 };
+      mctx.clearRect(0, 0, W, H);
+      mctx.fillStyle = '#ffffff'; mctx.fillRect(0, 0, W, H);
+
+      const T = mc.T;
+      const yMax = Math.max(mc.p90[T], mc.target) * 1.08;
+      const yMin = 0;
+      const sx = t => A.left + (t / T) * (W - A.left - A.right);
+      const sy = v => H - A.bottom - ((v - yMin) / (yMax - yMin)) * (H - A.top - A.bottom);
+
+      // グリッド（横線5本）＋Y軸ラベル（万円）
+      mctx.font = '12px Segoe UI, sans-serif';
+      for (let i = 0; i <= 5; i++) {
+        const yv = (yMax / 5) * i;
+        const py = sy(yv);
+        mctx.strokeStyle = '#eef0f2'; mctx.lineWidth = 1;
+        mctx.beginPath(); mctx.moveTo(A.left, py); mctx.lineTo(W - A.right, py); mctx.stroke();
+        mctx.fillStyle = '#66737d'; mctx.textAlign = 'right'; mctx.textBaseline = 'middle';
+        mctx.fillText(fmt万円表示(yv), A.left - 8, py);
+      }
+      // X軸ラベル（年）
+      mctx.fillStyle = '#66737d'; mctx.textAlign = 'center'; mctx.textBaseline = 'top';
+      const xStep = T <= 10 ? 2 : 3;
+      for (let t = 0; t <= T; t += xStep) {
+        mctx.fillText(t === 0 ? '今' : t + '年', sx(t), H - A.bottom + 8);
+      }
+
+      // 帯（P10-P90 外側、P25-P75 内側）
+      function band(lo, hi, alpha) {
+        mctx.fillStyle = `rgba(11,143,106,${alpha})`;
+        mctx.beginPath();
+        mctx.moveTo(sx(0), sy(hi[0]));
+        for (let t = 1; t <= T; t++) mctx.lineTo(sx(t), sy(hi[t]));
+        for (let t = T; t >= 0; t--) mctx.lineTo(sx(t), sy(lo[t]));
+        mctx.closePath(); mctx.fill();
+      }
+      band(mc.p10, mc.p90, 0.12);
+      band(mc.p25, mc.p75, 0.20);
+
+      // サンプルパス
+      mctx.strokeStyle = 'rgba(53,68,75,0.18)'; mctx.lineWidth = 1;
+      mc.samplePaths.forEach(path => {
+        mctx.beginPath();
+        path.forEach((v, t) => { const x = sx(t), y = sy(v); t === 0 ? mctx.moveTo(x, y) : mctx.lineTo(x, y); });
+        mctx.stroke();
+      });
+
+      // 中央値
+      mctx.strokeStyle = '#0b8f6a'; mctx.lineWidth = 3;
+      mctx.beginPath();
+      mc.p50.forEach((v, t) => { const x = sx(t), y = sy(v); t === 0 ? mctx.moveTo(x, y) : mctx.lineTo(x, y); });
+      mctx.stroke();
+
+      // 目標ライン
+      mctx.strokeStyle = '#d98324'; mctx.lineWidth = 1.5; mctx.setLineDash([6, 4]);
+      mctx.beginPath(); mctx.moveTo(A.left, sy(mc.target)); mctx.lineTo(W - A.right, sy(mc.target)); mctx.stroke();
+      mctx.setLineDash([]);
+
+      // 右端ラベル
+      mctx.textAlign = 'left'; mctx.textBaseline = 'middle';
+      mctx.font = '11px Segoe UI, sans-serif';
+      mctx.fillStyle = '#0b8f6a';
+      mctx.fillText('上位10% ' + fmt万円表示(mc.p90[T]), W - A.right + 6, sy(mc.p90[T]));
+      mctx.fillText('下位10% ' + fmt万円表示(mc.p10[T]), W - A.right + 6, sy(mc.p10[T]));
+      mctx.font = '700 12px Segoe UI, sans-serif';
+      mctx.fillText('中央値 ' + fmt万円表示(mc.p50[T]), W - A.right + 6, sy(mc.p50[T]));
+      mctx.fillStyle = '#9a5e10'; mctx.font = '11px Segoe UI, sans-serif';
+      mctx.fillText('目標 ' + fmt万円表示(mc.target), W - A.right + 6, sy(mc.target));
+    }
+
+    // Y軸用の簡易フォーマット（万円→億円）
+    function fmt万円表示(man) {
+      if (man >= 10000) return (man / 10000).toFixed(man >= 100000 ? 0 : 1) + '億';
+      return Math.round(man).toLocaleString() + '万';
+    }
+
     // ── Event listeners ────────────────────────────────────────────────────
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -979,6 +1145,11 @@
     document.getElementById('initialAmount').addEventListener('input', e => {
       const v = Number(e.target.value);
       if (v > 0) { state.initialAmount = v; render(); }
+    });
+
+    document.getElementById('targetAmount').addEventListener('input', e => {
+      const v = Number(e.target.value);
+      if (v > 0) { state.targetAmount = v; render(); }
     });
 
     document.getElementById('assetUniverse').addEventListener('change', e => {
