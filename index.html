@@ -396,6 +396,34 @@
         </div>
       </section>
 
+      <section class="lower" style="grid-template-columns:1fr">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>過去リプレイ（バックテスト）</h2>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+              <div class="preset-buttons" style="display:inline-flex">
+                <button class="preset-btn bt-cur active" data-cur="jpy" type="button">円建て（為替込み）</button>
+                <button class="preset-btn bt-cur" data-cur="usd" type="button">ドル建て</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:240px">
+                <label for="btStart" style="font-size:13px;color:#4d5a61;white-space:nowrap">開始時期</label>
+                <input id="btStart" type="range" min="0" max="100" value="0" step="1" style="flex:1" />
+                <span id="btStartLabel" style="font-size:13px;font-weight:700;min-width:64px"></span>
+              </div>
+            </div>
+            <div id="btResult" style="font-size:13px;color:#4d5a61;margin-bottom:8px"></div>
+            <canvas id="btChart" width="900" height="430" aria-label="バックテストの資産推移"></canvas>
+            <p style="font-size:12px;color:#66737d;line-height:1.7;margin-top:10px;">
+              <b>いまの配分</b>で、選んだ時期に<b>初期投資額をまとめて投資して持ち続けたら</b>どうなっていたかを実データで再現（2015年〜、配当込み）。
+              <b>円建て</b>はUSD資産を当時のドル円で換算＝為替の影響込み、<b>ドル建て</b>は為替を除いた現地通貨ベース。
+              縦軸は対数。これは過去の実績であり、将来を保証しません。
+            </p>
+          </div>
+        </div>
+      </section>
+
       <p class="disclaimer">
         免責事項：本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。
         試算値は対数正規分布の簡易近似（手数料・税金・為替・インフレ未考慮）です。
@@ -405,6 +433,7 @@
   </div>
 
   <script src="btc_powerlaw_data.js"></script>
+  <script src="backtest_data.js"></script>
   <script>
     // ── Real data from main.py (asset_navi_results.json) ──────────────────
 
@@ -492,6 +521,8 @@
       horizon: 10,
       initialAmount: 100,   // 万円
       targetAmount: 200,    // 万円（モンテカルロの目標額）
+      btStart: 0,           // バックテスト開始（週インデックス）
+      btCurrency: 'jpy',    // バックテスト通貨 'jpy'|'usd'
       enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true }
     };
 
@@ -637,6 +668,19 @@
         `<b style="color:#0b8f6a;font-size:16px">${Math.round(mc.successProb * 100)}%</b>` +
         `<span style="color:#66737d">（${mc.N}回中 ${Math.round(mc.successProb * mc.N)}回）</span>`;
 
+      // バックテスト
+      const bt = runBacktest(result);
+      drawBtChart(bt);
+      if (bt) {
+        const cagrCls = bt.cagr >= 0 ? '#0b8f6a' : '#bd3b3b';
+        document.getElementById('btStartLabel').textContent = bt.startDate.slice(0, 7);
+        document.getElementById('btResult').innerHTML =
+          `<b>${bt.startDate.slice(0, 7)}</b> に <b>${state.initialAmount.toLocaleString()}万円</b> を投資 → ` +
+          `現在 <b style="color:#2364aa;font-size:16px">${fmt万円表示(bt.finalValue)}円</b>` +
+          `（<b>×${bt.finalMult.toFixed(1)}</b>、年率 <b style="color:${cagrCls}">${(bt.cagr * 100).toFixed(1)}%</b>、` +
+          `${state.btCurrency === 'jpy' ? '円建て・為替込み' : 'ドル建て'}）`;
+      }
+
       // 設定をPC側（localStorage）に保存
       saveState();
     }
@@ -657,19 +701,24 @@
         if (typeof s.horizon === 'number') state.horizon = s.horizon;
         if (typeof s.initialAmount === 'number' && s.initialAmount > 0) state.initialAmount = s.initialAmount;
         if (typeof s.targetAmount === 'number' && s.targetAmount > 0) state.targetAmount = s.targetAmount;
+        if (typeof s.btStart === 'number') state.btStart = s.btStart;
+        if (s.btCurrency === 'jpy' || s.btCurrency === 'usd') state.btCurrency = s.btCurrency;
         if (s.enabled && typeof s.enabled === 'object') {
           Object.keys(state.enabled).forEach(k => {
             if (typeof s.enabled[k] === 'boolean') state.enabled[k] = s.enabled[k];
           });
         }
         // 画面の入力欄を復元した値に同期
-        document.querySelectorAll('.preset-btn').forEach(b =>
+        document.querySelectorAll('.preset-btn[data-preset]').forEach(b =>
           b.classList.toggle('active', b.dataset.preset === state.preset));
+        document.querySelectorAll('.bt-cur').forEach(b =>
+          b.classList.toggle('active', b.dataset.cur === state.btCurrency));
         document.getElementById('btcSlider').value = state.btcPct;
         document.getElementById('cashSlider').value = state.cashPct;
         document.getElementById('horizonSlider').value = state.horizon;
         document.getElementById('initialAmount').value = state.initialAmount;
         document.getElementById('targetAmount').value = state.targetAmount;
+        document.getElementById('btStart').value = state.btStart;
       } catch (e) {}
     }
 
@@ -1117,14 +1166,128 @@
       return Math.round(man).toLocaleString() + '万';
     }
 
+    // ── 過去リプレイ（バックテスト） ─────────────────────────────────────────
+    const btCanvas = document.getElementById('btChart');
+    const btx = btCanvas.getContext('2d');
+    const BT = window.BACKTEST_DATA || null;
+
+    function runBacktest(result) {
+      if (!BT) return null;
+      const dates = BT.dates, P = BT.prices, fx = P.usdjpy;
+      const n = dates.length;
+      const jpy = state.btCurrency === 'jpy';
+      const startIdx = Math.min(state.btStart, n - 2);
+
+      // 選んだ通貨での各資産価格（円建てはUSD価格×ドル円、現金は home通貨でフラット）
+      const priceAt = (k, t) => jpy ? P[k][t] * fx[t] : P[k][t];
+
+      // いまの配分（result.w）で startIdx にまとめて投資し保持（バイ＆ホールド）
+      const w = result.w;
+      const riskyKeys = ASSET_KEYS;  // 6リスク資産
+      const units = {};
+      riskyKeys.forEach(k => {
+        const p0 = priceAt(k, startIdx);
+        units[k] = (p0 > 0 && w[k] > 0) ? w[k] / p0 : 0;
+      });
+      const cashW = w.cash || 0;  // 現金はフラット（home通貨）
+
+      const initial = state.initialAmount;  // 万円
+      const values = [];
+      for (let t = startIdx; t < n; t++) {
+        let v = cashW;
+        riskyKeys.forEach(k => { v += units[k] * priceAt(k, t); });
+        values.push(initial * v);  // v(startIdx)=1 に正規化済み
+      }
+      const sub = dates.slice(startIdx);
+      const years = (n - 1 - startIdx) / 52;
+      const finalMult = values[values.length - 1] / initial;
+      const cagr = years > 0 ? Math.pow(finalMult, 1 / years) - 1 : 0;
+      return { dates: sub, values, startDate: dates[startIdx], years, finalMult, cagr,
+               finalValue: values[values.length - 1] };
+    }
+
+    function drawBtChart(bt) {
+      const W = btCanvas.width, H = btCanvas.height;
+      const A = { left: 76, right: 96, top: 24, bottom: 40 };
+      btx.clearRect(0, 0, W, H);
+      btx.fillStyle = '#ffffff'; btx.fillRect(0, 0, W, H);
+      if (!bt || bt.values.length < 2) return;
+
+      const vals = bt.values;
+      const vMin = Math.max(1, Math.min(...vals) * 0.85);
+      const vMax = Math.max(...vals) * 1.1;
+      const logMin = Math.log10(vMin), logMax = Math.log10(vMax);
+      const sx = i => A.left + (i / (vals.length - 1)) * (W - A.left - A.right);
+      const sy = v => H - A.bottom - ((Math.log10(Math.max(1, v)) - logMin) / (logMax - logMin)) * (H - A.top - A.bottom);
+
+      // 対数グリッド（10^e）＋Y軸ラベル
+      btx.font = '12px Segoe UI, sans-serif';
+      for (let e = Math.floor(logMin); e <= Math.ceil(logMax); e++) {
+        const gv = Math.pow(10, e);
+        if (gv < vMin || gv > vMax) continue;
+        const gy = sy(gv);
+        btx.strokeStyle = '#eef0f2'; btx.lineWidth = 1;
+        btx.beginPath(); btx.moveTo(A.left, gy); btx.lineTo(W - A.right, gy); btx.stroke();
+        btx.fillStyle = '#66737d'; btx.textAlign = 'right'; btx.textBaseline = 'middle';
+        btx.fillText(fmt万円表示(gv), A.left - 8, gy);
+      }
+      // X軸（年ラベル）
+      btx.fillStyle = '#66737d'; btx.textAlign = 'center'; btx.textBaseline = 'top';
+      const yearsSet = {};
+      bt.dates.forEach((d, i) => {
+        const yr = d.slice(0, 4);
+        if (!(yr in yearsSet) && Number(yr) % 2 === 0) { yearsSet[yr] = i; }
+      });
+      Object.keys(yearsSet).forEach(yr => { btx.fillText(yr, sx(yearsSet[yr]), H - A.bottom + 8); });
+
+      // 初期投資ライン
+      const initLine = state.initialAmount;
+      if (initLine >= vMin && initLine <= vMax) {
+        btx.strokeStyle = '#b0b8bd'; btx.lineWidth = 1; btx.setLineDash([5, 4]);
+        btx.beginPath(); btx.moveTo(A.left, sy(initLine)); btx.lineTo(W - A.right, sy(initLine)); btx.stroke();
+        btx.setLineDash([]);
+        btx.fillStyle = '#9aa6ac'; btx.font = '10px Segoe UI, sans-serif'; btx.textAlign = 'left'; btx.textBaseline = 'bottom';
+        btx.fillText('初期投資 ' + fmt万円表示(initLine), A.left + 4, sy(initLine) - 2);
+      }
+
+      // 資産推移ライン
+      btx.strokeStyle = '#2364aa'; btx.lineWidth = 2.5;
+      btx.beginPath();
+      vals.forEach((v, i) => { const x = sx(i), y = sy(v); i === 0 ? btx.moveTo(x, y) : btx.lineTo(x, y); });
+      btx.stroke();
+
+      // 終点マーカー＋ラベル
+      const lx = sx(vals.length - 1), ly = sy(vals[vals.length - 1]);
+      btx.fillStyle = '#2364aa'; btx.beginPath(); btx.arc(lx, ly, 5, 0, Math.PI * 2); btx.fill();
+      btx.fillStyle = '#2364aa'; btx.font = '700 12px Segoe UI, sans-serif';
+      btx.textAlign = 'right'; btx.textBaseline = 'bottom';
+      btx.fillText(fmt万円表示(vals[vals.length - 1]), lx - 8, ly - 4);
+    }
+
     // ── Event listeners ────────────────────────────────────────────────────
-    document.querySelectorAll('.preset-btn').forEach(btn => {
+    document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.preset-btn[data-preset]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.preset = btn.dataset.preset;
         render();
       });
+    });
+
+    // バックテスト：通貨トグル
+    document.querySelectorAll('.bt-cur').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bt-cur').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.btCurrency = btn.dataset.cur;
+        render();
+      });
+    });
+
+    // バックテスト：開始時期スライダー
+    document.getElementById('btStart').addEventListener('input', e => {
+      state.btStart = Number(e.target.value);
+      render();
     });
 
     document.getElementById('btcSlider').addEventListener('input', e => {
@@ -1195,10 +1358,21 @@
       root.innerHTML = html;
     }
 
+    // バックテスト・スライダーの範囲をデータ長から設定（最低1年分を残す）
+    function initBacktestSlider() {
+      const slider = document.getElementById('btStart');
+      if (!BT) { slider.disabled = true; return; }
+      const maxIdx = Math.max(0, BT.dates.length - 53);
+      slider.max = maxIdx;
+      if (state.btStart > maxIdx) state.btStart = 0;
+      slider.value = state.btStart;
+    }
+
     // ── Init ───────────────────────────────────────────────────────────────
     loadState();          // PC側に保存された設定を復元
     renderAssetUniverse();
     renderCorrHeatmap();
+    initBacktestSlider();
     render();
   </script>
 </body>
