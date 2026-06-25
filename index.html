@@ -673,9 +673,14 @@
       drawBtChart(bt);
       if (bt) {
         const cagrCls = bt.cagr >= 0 ? '#0b8f6a' : '#bd3b3b';
+        const totalMonths = Math.round(bt.years * 12);
+        const yy = Math.floor(totalMonths / 12), mm = totalMonths % 12;
+        const periodStr = (yy > 0 ? yy + '年' : '') + (mm > 0 ? mm + 'ヶ月' : (yy > 0 ? '' : '0ヶ月'));
+        const endStr = bt.dates[bt.dates.length - 1].slice(0, 7);
         document.getElementById('btStartLabel').textContent = bt.startDate.slice(0, 7);
         document.getElementById('btResult').innerHTML =
-          `<b>${bt.startDate.slice(0, 7)}</b> に <b>${state.initialAmount.toLocaleString()}万円</b> を投資 → ` +
+          `<b>${bt.startDate.slice(0, 7)} 〜 ${endStr}（約${periodStr}）</b>に ` +
+          `<b>${state.initialAmount.toLocaleString()}万円</b> を投資 → ` +
           `現在 <b style="color:#2364aa;font-size:16px">${fmt万円表示(bt.finalValue)}円</b>` +
           `（<b>×${bt.finalMult.toFixed(1)}</b>、年率 <b style="color:${cagrCls}">${(bt.cagr * 100).toFixed(1)}%</b>、` +
           `${state.btCurrency === 'jpy' ? '円建て・為替込み' : 'ドル建て'}）`;
