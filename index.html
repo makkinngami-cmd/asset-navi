@@ -191,6 +191,21 @@
     .quilt td { border-radius: 5px; padding: 5px 4px; text-align: center; color: #fff; min-width: 64px; line-height: 1.25; }
     .quilt td .q-name { font-size: 10px; font-weight: 700; opacity: 0.95; }
     .quilt td .q-ret { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    /* 用語ツールチップ */
+    .term { border-bottom: 1px dotted #9aa6ac; cursor: help; }
+    .info { display: inline-flex; align-items: center; justify-content: center;
+      width: 15px; height: 15px; border-radius: 50%; background: #d8e0e4; color: #5a676e;
+      font-size: 10px; font-weight: 700; margin-left: 6px; cursor: help; vertical-align: middle; }
+    .term, .info { position: relative; outline: none; }
+    .term:hover::after, .term:focus::after, .info:hover::after, .info:focus::after {
+      content: attr(data-tip);
+      position: absolute; left: 0; bottom: 135%;
+      background: #172026; color: #fff; font-size: 11px; font-weight: 400; line-height: 1.6;
+      letter-spacing: .2px; padding: 8px 10px; border-radius: 6px;
+      width: 240px; white-space: normal; text-align: left; z-index: 60;
+      box-shadow: 0 6px 18px rgba(24,32,38,.28); pointer-events: none;
+    }
+    .info:hover::after, .info:focus::after { left: 50%; transform: translateX(-50%); }
     @media (max-width: 980px) {
       .app { grid-template-columns: 1fr; }
       .sidebar { min-height: auto; }
@@ -250,7 +265,7 @@
         <!-- Left: Frontier Chart -->
         <div class="panel">
           <div class="panel-head">
-            <h2>効率的フロンティア（参考）</h2>
+            <h2>効率的フロンティア（参考）<span class="info" tabindex="0" data-tip="各リスク水準で最大リターンになる資産の組み合わせをつないだ曲線。投資の「一番おいしい縁」。オレンジ点線＝資本市場線(CML)、★＝最大シャープの接点ポートフォリオ。">?</span></h2>
           </div>
           <div class="panel-body">
             <div class="chart-wrap">
@@ -291,7 +306,7 @@
               </div>
               <div class="control-row">
                 <div class="control-meta">
-                  <label for="cashSlider">現金比率（無リスク資産）</label>
+                  <label for="cashSlider">現金比率（無リスク資産）<span class="info" tabindex="0" data-tip="現金＝ほぼ値動きのない無リスク資産。増やすほどリスク資産を減らし、CML上を左下（守り）へ移動します。リターンのダイヤルです。">?</span></label>
                   <span class="value" id="cashValue">0%</span>
                 </div>
                 <input id="cashSlider" type="range" min="0" max="100" value="0" step="1" />
@@ -319,9 +334,9 @@
               </div>
             </div>
             <div class="mini-metrics">
-              <span>期待リターン<strong id="returnVal">--%</strong></span>
-              <span>リスク<strong id="riskVal">--%</strong></span>
-              <span>Sharpe<strong id="sharpeVal">--</strong></span>
+              <span><span class="term" tabindex="0" data-tip="1年あたりに平均で期待されるリターン（年率）。前提に基づく推計で、毎年この通りにはなりません。">期待リターン</span><strong id="returnVal">--%</strong></span>
+              <span><span class="term" tabindex="0" data-tip="リターンのブレの大きさ＝標準偏差(σ)。大きいほど上下に大きく振れます。ざっくり約2/3の年が「平均±リスク」に収まる目安。">リスク</span><strong id="riskVal">--%</strong></span>
+              <span><span class="term" tabindex="0" data-tip="シャープレシオ＝(リターン−無リスク金利)÷リスク。1単位のリスクで何%余分に稼げるか。高いほどリスク効率が良い。">Sharpe</span><strong id="sharpeVal">--</strong></span>
             </div>
           </div>
         </div>
