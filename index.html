@@ -463,6 +463,29 @@
         </div>
       </section>
 
+      <section class="lower" style="grid-template-columns:1fr">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>MVOの罠：期待リターンを少し変えると最適配分が激変する</h2>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+              <label for="mvoSlider" style="font-size:13px;color:#4d5a61;white-space:nowrap">BTC期待リターンの仮定</label>
+              <input id="mvoSlider" type="range" min="0" max="60" value="25" step="1" style="flex:1;min-width:200px" />
+              <span id="mvoValue" style="font-size:13px;font-weight:700;min-width:48px"></span>
+            </div>
+            <div id="mvoResult" style="font-size:13px;color:#4d5a61;margin-bottom:8px"></div>
+            <canvas id="mvoChart" width="900" height="360" aria-label="BTC期待リターンと最適BTC配分の関係"></canvas>
+            <p style="font-size:12px;color:#66737d;line-height:1.7;margin-top:10px;">
+              横軸＝BTCの期待リターンを何%と仮定するか、縦軸＝そのとき<b>最大シャープ（接点★）になるBTC配分</b>。
+              <b>ある閾値を境にBTC配分が0%→急上昇する「崖」</b>になります＝平均分散最適化(MVO)は
+              「一番高リターンと仮定した資産」に全力で寄せる（誤差最大化）。
+              だから期待リターンの<b>わずかな見積もり違いで答えが激変</b>します。点線＝波モデルの現在値。
+            </p>
+          </div>
+        </div>
+      </section>
+
       <p class="disclaimer">
         免責事項：本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。
         試算値は対数正規分布の簡易近似（手数料・税金・為替・インフレ未考慮）です。
@@ -562,6 +585,7 @@
       targetAmount: 200,    // 万円（モンテカルロの目標額）
       btStart: 0,           // バックテスト開始（週インデックス）
       btCurrency: 'jpy',    // バックテスト通貨 'jpy'|'usd'
+      mvoBtcRet: 25,        // MVOの罠デモ：BTC期待リターンの手動仮定（%）
       enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true }
     };
 
@@ -725,6 +749,9 @@
           `${state.btCurrency === 'jpy' ? '円建て・為替込み' : 'ドル建て'}）`;
       }
 
+      // MVOの罠（enabled資産・期間に依存）
+      drawMvoChart();
+
       // ドローダウン
       const dd = runDrawdown(result);
       drawDdChart(dd);
@@ -759,6 +786,7 @@
         if (typeof s.targetAmount === 'number' && s.targetAmount > 0) state.targetAmount = s.targetAmount;
         if (typeof s.btStart === 'number') state.btStart = s.btStart;
         if (s.btCurrency === 'jpy' || s.btCurrency === 'usd') state.btCurrency = s.btCurrency;
+        if (typeof s.mvoBtcRet === 'number') state.mvoBtcRet = s.mvoBtcRet;
         if (s.enabled && typeof s.enabled === 'object') {
           Object.keys(state.enabled).forEach(k => {
             if (typeof s.enabled[k] === 'boolean') state.enabled[k] = s.enabled[k];
@@ -775,6 +803,7 @@
         document.getElementById('initialAmount').value = state.initialAmount;
         document.getElementById('targetAmount').value = state.targetAmount;
         document.getElementById('btStart').value = state.btStart;
+        document.getElementById('mvoSlider').value = state.mvoBtcRet;
       } catch (e) {}
     }
 
@@ -1447,6 +1476,97 @@
       root.innerHTML = html;
     }
 
+    // ── MVOの罠：期待リターン → 最適BTC配分 ──────────────────────────────────
+    const mvoCanvas = document.getElementById('mvoChart');
+    const vtx = mvoCanvas.getContext('2d');
+
+    function blendPresetsW(t) {
+      const a = t <= 0.5
+        ? { from: PRESETS.conservative.weights, to: PRESETS.balanced.weights, s: t * 2 }
+        : { from: PRESETS.balanced.weights,     to: PRESETS.growth.weights,   s: (t - 0.5) * 2 };
+      const w = {}; ASSET_KEYS.forEach(k => { w[k] = a.from[k] * (1 - a.s) + a.to[k] * a.s; });
+      return w;
+    }
+
+    // 与えたBTC期待リターン(小数)のときの、最大シャープ(接点)ポートのBTC配分(0..1)
+    function tangencyBtcWeight(btcRet) {
+      const cov = COV.map(r => [...r]); cov[BTC_IDX][BTC_IDX] = BTC_VAR;
+      const rets = { ...BASE_RETURNS, btc: btcRet };
+      let best = -Infinity, bestBtc = 0;
+      for (let bi = 0; bi <= 20; bi++) {
+        const btcFrac = bi / 20;
+        for (let ti = 0; ti <= 12; ti++) {
+          const baseW = blendPresetsW(ti / 12);
+          let baseSum = 0;
+          ASSET_KEYS.forEach(k => { if (k !== 'btc' && state.enabled[k]) baseSum += (baseW[k] || 0); });
+          const scale = baseSum > 0 ? (1 - btcFrac) / baseSum : 0;
+          const w = {};
+          ASSET_KEYS.forEach(k => { w[k] = k === 'btc' ? btcFrac : (state.enabled[k] ? (baseW[k] || 0) * scale : 0); });
+          let ret = 0; ASSET_KEYS.forEach(k => ret += w[k] * rets[k]);
+          const arr = ASSET_KEYS.map(k => w[k]); let v = 0;
+          for (let i = 0; i < ASSET_KEYS.length; i++) for (let j = 0; j < ASSET_KEYS.length; j++) v += arr[i] * arr[j] * cov[i][j];
+          const vol = Math.sqrt(Math.max(0, v));
+          const sh = vol > 0 ? (ret - RF) / vol : -Infinity;
+          if (sh > best) { best = sh; bestBtc = btcFrac; }
+        }
+      }
+      return bestBtc;
+    }
+
+    function drawMvoChart() {
+      document.getElementById('mvoValue').textContent = state.mvoBtcRet + '%';
+      const W = mvoCanvas.width, H = mvoCanvas.height;
+      const A = { left: 56, right: 24, top: 20, bottom: 38 };
+      const xMax = 60;  // 仮定するBTC期待リターンの上限(%)
+      vtx.clearRect(0, 0, W, H); vtx.fillStyle = '#ffffff'; vtx.fillRect(0, 0, W, H);
+      const sx = xr => A.left + (xr / xMax) * (W - A.left - A.right);
+      const sy = yw => H - A.bottom - (yw / 100) * (H - A.top - A.bottom);
+
+      // グリッド＋軸
+      vtx.font = '12px Segoe UI, sans-serif';
+      for (let g = 0; g <= 100; g += 20) {
+        const gy = sy(g);
+        vtx.strokeStyle = '#eef0f2'; vtx.lineWidth = 1;
+        vtx.beginPath(); vtx.moveTo(A.left, gy); vtx.lineTo(W - A.right, gy); vtx.stroke();
+        vtx.fillStyle = '#66737d'; vtx.textAlign = 'right'; vtx.textBaseline = 'middle';
+        vtx.fillText(g + '%', A.left - 8, gy);
+      }
+      vtx.textAlign = 'center'; vtx.textBaseline = 'top';
+      for (let xr = 0; xr <= xMax; xr += 10) vtx.fillText(xr + '%', sx(xr), H - A.bottom + 6);
+      vtx.fillStyle = '#35444b'; vtx.font = '700 11px Segoe UI, sans-serif';
+      vtx.fillText('BTC期待リターンの仮定 →', (A.left + W - A.right) / 2, H - 14);
+
+      // 最適BTC配分カーブ
+      const pts = [];
+      for (let xr = 0; xr <= xMax; xr += 1.5) pts.push({ xr, yw: tangencyBtcWeight(xr / 100) * 100 });
+      vtx.strokeStyle = '#bd3b3b'; vtx.lineWidth = 2.5;
+      vtx.beginPath();
+      pts.forEach((p, i) => { const x = sx(p.xr), y = sy(p.yw); i === 0 ? vtx.moveTo(x, y) : vtx.lineTo(x, y); });
+      vtx.stroke();
+
+      // 波モデル現在値（参照線）
+      const waveRet = getBtcReturn(state.horizon) * 100;
+      if (waveRet <= xMax) {
+        vtx.strokeStyle = '#8a8f94'; vtx.lineWidth = 1; vtx.setLineDash([4, 4]);
+        vtx.beginPath(); vtx.moveTo(sx(waveRet), A.top); vtx.lineTo(sx(waveRet), H - A.bottom); vtx.stroke();
+        vtx.setLineDash([]);
+        vtx.fillStyle = '#66737d'; vtx.font = '10px Segoe UI, sans-serif'; vtx.textAlign = 'left'; vtx.textBaseline = 'top';
+        vtx.fillText('波モデル ' + waveRet.toFixed(0) + '%', sx(waveRet) + 4, A.top + 2);
+      }
+
+      // 現在の仮定マーカー
+      const cur = state.mvoBtcRet;
+      const curY = tangencyBtcWeight(cur / 100) * 100;
+      vtx.strokeStyle = '#d98324'; vtx.lineWidth = 1.5; vtx.setLineDash([3, 3]);
+      vtx.beginPath(); vtx.moveTo(sx(cur), sy(0)); vtx.lineTo(sx(cur), sy(curY)); vtx.lineTo(A.left, sy(curY)); vtx.stroke();
+      vtx.setLineDash([]);
+      vtx.fillStyle = '#d98324'; vtx.beginPath(); vtx.arc(sx(cur), sy(curY), 5, 0, Math.PI * 2); vtx.fill();
+
+      document.getElementById('mvoResult').innerHTML =
+        `BTC期待リターンを <b>${cur}%</b> と仮定 → 最大シャープ（接点★）の<b>最適BTC配分は ` +
+        `<span style="color:#bd3b3b;font-size:16px">${Math.round(curY)}%</span></b>`;
+    }
+
     // ── Event listeners ────────────────────────────────────────────────────
     document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1472,6 +1592,13 @@
     document.getElementById('btStart').addEventListener('input', e => {
       state.btStart = Number(e.target.value);
       render();
+    });
+
+    // MVOの罠：BTC期待リターンの仮定スライダー
+    document.getElementById('mvoSlider').addEventListener('input', e => {
+      state.mvoBtcRet = Number(e.target.value);
+      drawMvoChart();
+      saveState();
     });
 
     document.getElementById('btcSlider').addEventListener('input', e => {
