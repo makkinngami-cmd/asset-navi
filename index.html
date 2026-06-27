@@ -515,16 +515,18 @@
     // ── Real data from main.py (asset_navi_results.json) ──────────────────
 
     // Covariance matrix
-    // 6x6 covariance matrix of RISKY assets (annualized, 2018-2026 daily returns)
-    // Order: global_equity, sp500, us_bond, gold, reit, btc
+    // 8x8 covariance matrix of RISKY assets (annualized, 2018-2026 daily returns)
+    // Order: global_equity, sp500, us_bond, gold, reit, btc, em, commodity
     // 現金（無リスク資産）はフロンティアの材料ではなく、CMLの起点 rf として別扱い。
     const COV = [
-      [ 0.032568, 0.033395, 0.002559, 0.006473, 0.027909, 0.038212],
-      [ 0.033395, 0.036106, 0.002216, 0.004545, 0.029127, 0.037742],
-      [ 0.002559, 0.002216, 0.003350, 0.003152, 0.004487, 0.004872],
-      [ 0.006473, 0.004545, 0.003152, 0.027886, 0.006106, 0.012970],
-      [ 0.027909, 0.029127, 0.004487, 0.006106, 0.044356, 0.028754],
-      [ 0.038212, 0.037742, 0.004872, 0.012970, 0.028754, 0.336760]
+      [ 0.032565, 0.033371, 0.002550, 0.006519, 0.027788, 0.038175, 0.029446, 0.010420],
+      [ 0.033371, 0.036063, 0.002208, 0.004572, 0.029011, 0.037694, 0.027401, 0.010198],
+      [ 0.002550, 0.002208, 0.003345, 0.003122, 0.004479, 0.004838, 0.002462, 0.000191],
+      [ 0.006519, 0.004572, 0.003122, 0.028054, 0.006082, 0.013107, 0.009330, 0.007872],
+      [ 0.027788, 0.029011, 0.004479, 0.006082, 0.044307, 0.028653, 0.021748, 0.007168],
+      [ 0.038175, 0.037694, 0.004838, 0.013107, 0.028653, 0.336202, 0.036469, 0.012548],
+      [ 0.029446, 0.027401, 0.002462, 0.009330, 0.021748, 0.036469, 0.037912, 0.010860],
+      [ 0.010420, 0.010198, 0.000191, 0.007872, 0.007168, 0.012548, 0.010860, 0.031333]
     ];
 
     const BTC_IDX = 5;
@@ -556,27 +558,29 @@
       us_bond:       0.015,
       gold:          0.02,
       reit:          0.04,
-      btc:           0.25  // placeholder
+      btc:           0.25,  // placeholder
+      em:            0.06,
+      commodity:     0.025
     };
 
-    const ASSET_KEYS = ['global_equity', 'sp500', 'us_bond', 'gold', 'reit', 'btc'];
+    const ASSET_KEYS = ['global_equity', 'sp500', 'us_bond', 'gold', 'reit', 'btc', 'em', 'commodity'];
 
     // Preset base weights (btc=0 in base; added via slider)
     const PRESETS = {
       conservative: {
         label: '保守',
         desc: '債券中心のリスク資産構成。守りは現金比率で調整。',
-        weights: { global_equity: 0.19, sp500: 0.06, us_bond: 0.56, gold: 0.13, reit: 0.06, btc: 0.0 }
+        weights: { global_equity: 0.17, sp500: 0.05, us_bond: 0.52, gold: 0.12, reit: 0.05, btc: 0.0, em: 0.03, commodity: 0.06 }
       },
       balanced: {
         label: '標準',
         desc: '株式と債券をバランスよく組み合わせた標準的な構成。',
-        weights: { global_equity: 0.33, sp500: 0.17, us_bond: 0.28, gold: 0.11, reit: 0.11, btc: 0.0 }
+        weights: { global_equity: 0.30, sp500: 0.15, us_bond: 0.25, gold: 0.10, reit: 0.10, btc: 0.0, em: 0.05, commodity: 0.05 }
       },
       growth: {
         label: '積極',
         desc: '株式中心。高リターン狙いで、値動きも大きい。',
-        weights: { global_equity: 0.44, sp500: 0.22, us_bond: 0.11, gold: 0.09, reit: 0.14, btc: 0.0 }
+        weights: { global_equity: 0.38, sp500: 0.20, us_bond: 0.10, gold: 0.08, reit: 0.12, btc: 0.0, em: 0.08, commodity: 0.04 }
       }
     };
 
@@ -587,7 +591,9 @@
       { key: 'us_bond',       label: '米国債券', color: '#0b8f6a', risk:  5.79, baseRet: 1.5  },
       { key: 'gold',          label: '金',       color: '#b46b1d', risk: 16.70, baseRet: 2.0  },
       { key: 'reit',          label: 'REIT',     color: '#6f5aa8', risk: 21.06, baseRet: 4.0  },
-      { key: 'btc',           label: 'BTC',      color: '#bd3b3b', risk: 58.03, baseRet: 25.0 }
+      { key: 'btc',           label: 'BTC',      color: '#bd3b3b', risk: 58.03, baseRet: 25.0 },
+      { key: 'em',            label: '新興国株', color: '#1f9e89', risk: 19.47, baseRet: 6.0  },
+      { key: 'commodity',     label: 'コモディティ', color: '#c98a1b', risk: 17.70, baseRet: 2.5 }
     ];
 
     // ── App state ──────────────────────────────────────────────────────────
@@ -601,7 +607,7 @@
       btStart: 0,           // バックテスト開始（週インデックス）
       btCurrency: 'jpy',    // バックテスト通貨 'jpy'|'usd'
       mvoBtcRet: 25,        // MVOの罠デモ：BTC期待リターンの手動仮定（%）
-      enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true }
+      enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true, em: true, commodity: true }
     };
 
     // ── Core computation ───────────────────────────────────────────────────
@@ -1444,7 +1450,7 @@
 
     // ── 資産クイルト（年別リターン順位表） ───────────────────────────────────
     const QUILT_SHORT = { global_equity: '全世界', sp500: 'S&P500', us_bond: '米国債',
-                          gold: '金', reit: 'REIT', btc: 'BTC' };
+                          gold: '金', reit: 'REIT', btc: 'BTC', em: '新興国', commodity: '商品' };
 
     function computeAnnualReturns() {
       if (!BT) return null;
