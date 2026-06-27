@@ -424,6 +424,23 @@
         </div>
       </section>
 
+      <section class="lower" style="grid-template-columns:1fr">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>最大下落（ドローダウン）— いまの配分の過去</h2>
+          </div>
+          <div class="panel-body">
+            <div id="ddResult" style="font-size:13px;color:#4d5a61;margin-bottom:8px"></div>
+            <canvas id="ddChart" width="900" height="360" aria-label="ドローダウン（アンダーウォーター）チャート"></canvas>
+            <p style="font-size:12px;color:#66737d;line-height:1.7;margin-top:10px;">
+              いまの配分が<b>過去の高値からどれだけ下落したか</b>を時系列で表示（2015年〜、上のバックテストと同じ通貨設定）。
+              0%＝最高値更新、下に行くほど深い下落。<b>「期待リターンの裏でどれだけ含み損に耐える必要があったか」</b>が分かります。
+              標準偏差は平均的なブレですが、ここでは<b>実際に起きた最悪の落ち込み</b>を見られます。
+            </p>
+          </div>
+        </div>
+      </section>
+
       <p class="disclaimer">
         免責事項：本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。
         試算値は対数正規分布の簡易近似（手数料・税金・為替・インフレ未考慮）です。
@@ -684,6 +701,16 @@
           `現在 <b style="color:#2364aa;font-size:16px">${fmt万円表示(bt.finalValue)}円</b>` +
           `（<b>×${bt.finalMult.toFixed(1)}</b>、年率 <b style="color:${cagrCls}">${(bt.cagr * 100).toFixed(1)}%</b>、` +
           `${state.btCurrency === 'jpy' ? '円建て・為替込み' : 'ドル建て'}）`;
+      }
+
+      // ドローダウン
+      const dd = runDrawdown(result);
+      drawDdChart(dd);
+      if (dd) {
+        document.getElementById('ddResult').innerHTML =
+          `この配分の<b>過去最大下落：<span style="color:#bd3b3b;font-size:16px">${(dd.maxDD * 100).toFixed(0)}%</span></b>` +
+          `（${dd.peakDate.slice(0, 7)}の高値 → ${dd.maxDate.slice(0, 7)}）` +
+          `<span style="color:#66737d">／ 現在 ${(dd.curDD * 100).toFixed(0)}%（高値から）</span>`;
       }
 
       // 設定をPC側（localStorage）に保存
@@ -1267,6 +1294,84 @@
       btx.fillStyle = '#2364aa'; btx.font = '700 12px Segoe UI, sans-serif';
       btx.textAlign = 'right'; btx.textBaseline = 'bottom';
       btx.fillText(fmt万円表示(vals[vals.length - 1]), lx - 8, ly - 4);
+    }
+
+    // ── ドローダウン（アンダーウォーター） ───────────────────────────────────
+    const ddCanvas = document.getElementById('ddChart');
+    const dtx = ddCanvas.getContext('2d');
+
+    function runDrawdown(result) {
+      if (!BT) return null;
+      const P = BT.prices, fx = P.usdjpy, dates = BT.dates, n = dates.length;
+      const jpy = state.btCurrency === 'jpy';
+      const priceAt = (k, t) => jpy ? P[k][t] * fx[t] : P[k][t];
+      const w = result.w;
+      const units = {};
+      ASSET_KEYS.forEach(k => { const p0 = priceAt(k, 0); units[k] = (p0 > 0 && w[k] > 0) ? w[k] / p0 : 0; });
+      const cashW = w.cash || 0;
+      const vals = [];
+      for (let t = 0; t < n; t++) { let v = cashW; ASSET_KEYS.forEach(k => { v += units[k] * priceAt(k, t); }); vals.push(v); }
+      // ドローダウン＝高値からの下落率
+      let peak = vals[0], curPeakIdx = 0;
+      const dd = [];
+      let maxDD = 0, maxIdx = 0, peakIdx = 0;
+      for (let t = 0; t < n; t++) {
+        if (vals[t] > peak) { peak = vals[t]; curPeakIdx = t; }
+        const d = vals[t] / peak - 1;
+        dd.push(d);
+        if (d < maxDD) { maxDD = d; maxIdx = t; peakIdx = curPeakIdx; }
+      }
+      const curDD = dd[n - 1];
+      return { dates, dd, maxDD, maxDate: dates[maxIdx], peakDate: dates[peakIdx], curDD };
+    }
+
+    function drawDdChart(dd) {
+      const W = ddCanvas.width, H = ddCanvas.height;
+      const A = { left: 60, right: 24, top: 20, bottom: 36 };
+      dtx.clearRect(0, 0, W, H); dtx.fillStyle = '#ffffff'; dtx.fillRect(0, 0, W, H);
+      if (!dd) return;
+      const n = dd.dd.length;
+      const yMin = Math.min(-0.1, dd.maxDD * 1.1);  // 下端（負）
+      const sx = i => A.left + (i / (n - 1)) * (W - A.left - A.right);
+      const sy = d => A.top + (d / yMin) * (H - A.top - A.bottom);  // d=0→top, d=yMin→bottom
+
+      // グリッド＋Y軸（%）
+      dtx.font = '12px Segoe UI, sans-serif';
+      const step = yMin <= -0.6 ? 0.2 : 0.1;
+      for (let g = 0; g >= yMin; g -= step) {
+        const gy = sy(g);
+        dtx.strokeStyle = g === 0 ? '#b0b8bd' : '#eef0f2'; dtx.lineWidth = 1;
+        dtx.beginPath(); dtx.moveTo(A.left, gy); dtx.lineTo(W - A.right, gy); dtx.stroke();
+        dtx.fillStyle = '#66737d'; dtx.textAlign = 'right'; dtx.textBaseline = 'middle';
+        dtx.fillText(Math.round(g * 100) + '%', A.left - 8, gy);
+      }
+      // X軸（年）
+      dtx.fillStyle = '#66737d'; dtx.textAlign = 'center'; dtx.textBaseline = 'top';
+      const seen = {};
+      dd.dates.forEach((d, i) => { const y = d.slice(0, 4); if (!(y in seen) && Number(y) % 2 === 0) { seen[y] = i; } });
+      Object.keys(seen).forEach(y => dtx.fillText(y, sx(seen[y]), H - A.bottom + 6));
+
+      // アンダーウォーター塗り（0→ddの赤いエリア）
+      dtx.fillStyle = 'rgba(189,59,59,0.18)';
+      dtx.beginPath();
+      dtx.moveTo(sx(0), sy(0));
+      dd.dd.forEach((d, i) => dtx.lineTo(sx(i), sy(d)));
+      dtx.lineTo(sx(n - 1), sy(0));
+      dtx.closePath(); dtx.fill();
+      // ライン
+      dtx.strokeStyle = '#bd3b3b'; dtx.lineWidth = 1.5;
+      dtx.beginPath();
+      dd.dd.forEach((d, i) => { const x = sx(i), y = sy(d); i === 0 ? dtx.moveTo(x, y) : dtx.lineTo(x, y); });
+      dtx.stroke();
+
+      // 最大下落点マーカー
+      const mi = dd.dates.indexOf(dd.maxDate);
+      if (mi >= 0) {
+        const mx = sx(mi), my = sy(dd.maxDD);
+        dtx.fillStyle = '#bd3b3b'; dtx.beginPath(); dtx.arc(mx, my, 4, 0, Math.PI * 2); dtx.fill();
+        dtx.font = '700 12px Segoe UI, sans-serif'; dtx.textAlign = 'center'; dtx.textBaseline = 'top';
+        dtx.fillText((dd.maxDD * 100).toFixed(0) + '%', mx, my + 6);
+      }
     }
 
     // ── Event listeners ────────────────────────────────────────────────────
