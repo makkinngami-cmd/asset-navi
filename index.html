@@ -424,37 +424,6 @@
         </div>
       </section>
 
-      <section class="lower" style="grid-template-columns:1fr">
-        <div class="panel">
-          <div class="panel-head">
-            <h2>取り崩しシミュレーション（出口・2000シナリオ）</h2>
-          </div>
-          <div class="panel-body">
-            <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:12px">
-              <div style="display:flex;flex-direction:column;gap:4px">
-                <label for="wdInitial" style="font-size:12px;color:#66737d">開始資産（万円）</label>
-                <input id="wdInitial" type="number" min="100" max="1000000" value="3000" step="100" style="width:130px" />
-              </div>
-              <div style="display:flex;flex-direction:column;gap:4px">
-                <label for="wdAnnual" style="font-size:12px;color:#66737d">毎年取り崩し（万円）</label>
-                <input id="wdAnnual" type="number" min="0" max="100000" value="120" step="10" style="width:130px" />
-              </div>
-              <div style="display:flex;flex-direction:column;gap:4px">
-                <label for="wdYears" style="font-size:12px;color:#66737d">取り崩し期間（年）</label>
-                <input id="wdYears" type="number" min="5" max="60" value="30" step="1" style="width:110px" />
-              </div>
-            </div>
-            <div id="wdResult" style="font-size:13px;color:#4d5a61;margin-bottom:8px"></div>
-            <canvas id="wdChart" width="900" height="430" aria-label="取り崩し後の残高推移"></canvas>
-            <p style="font-size:12px;color:#66737d;line-height:1.7;margin-top:10px;">
-              リタイア資産から毎年取り崩したとき、<b>いまの配分</b>のリターン・リスクで<b>資産が尽きない確率（成功率）</b>を試算。
-              濃い帯＝中位50%、薄い帯＝上下10〜90%。<b>暴落が早い時期に来ると一気に枯渇しやすい（シーケンスリスク）</b>。
-              取り崩し率＝毎年取り崩し÷開始資産（4%が一つの目安）。インフレ・税は未考慮、将来を保証しません。
-            </p>
-          </div>
-        </div>
-      </section>
-
       <p class="disclaimer">
         免責事項：本ツールはシミュレーションであり投資助言ではありません。将来の結果を保証するものではなく、投資判断は自己責任で行ってください。
         試算値は対数正規分布の簡易近似（手数料・税金・為替・インフレ未考慮）です。
@@ -554,9 +523,6 @@
       targetAmount: 200,    // 万円（モンテカルロの目標額）
       btStart: 0,           // バックテスト開始（週インデックス）
       btCurrency: 'jpy',    // バックテスト通貨 'jpy'|'usd'
-      wdInitial: 3000,      // 取り崩し開始資産（万円）
-      wdAnnual: 120,        // 年間取り崩し額（万円／年）
-      wdYears: 30,          // 取り崩し期間（年）
       enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true }
     };
 
@@ -720,17 +686,6 @@
           `${state.btCurrency === 'jpy' ? '円建て・為替込み' : 'ドル建て'}）`;
       }
 
-      // 取り崩しシミュレーション
-      const wd = runWithdrawal(result);
-      drawWithdrawChart(wd);
-      const succ = Math.round(wd.successProb * 100);
-      const succCls = succ >= 80 ? '#0b8f6a' : (succ >= 50 ? '#b46b1d' : '#bd3b3b');
-      document.getElementById('wdResult').innerHTML =
-        `毎年 <b>${state.wdAnnual.toLocaleString()}万円</b>（取り崩し率 <b>${(wd.drawRate * 100).toFixed(1)}%</b>）を ` +
-        `<b>${state.wdYears}年</b> 取り崩し → ` +
-        `<b>資産が尽きない確率：<span style="color:${succCls};font-size:16px">${succ}%</span></b>` +
-        `<span style="color:#66737d">（${state.wdYears}年後の残高中央値 ${fmt万円表示(wd.medianEnd)}円）</span>`;
-
       // 設定をPC側（localStorage）に保存
       saveState();
     }
@@ -753,9 +708,6 @@
         if (typeof s.targetAmount === 'number' && s.targetAmount > 0) state.targetAmount = s.targetAmount;
         if (typeof s.btStart === 'number') state.btStart = s.btStart;
         if (s.btCurrency === 'jpy' || s.btCurrency === 'usd') state.btCurrency = s.btCurrency;
-        if (typeof s.wdInitial === 'number' && s.wdInitial > 0) state.wdInitial = s.wdInitial;
-        if (typeof s.wdAnnual === 'number' && s.wdAnnual >= 0) state.wdAnnual = s.wdAnnual;
-        if (typeof s.wdYears === 'number' && s.wdYears >= 1) state.wdYears = s.wdYears;
         if (s.enabled && typeof s.enabled === 'object') {
           Object.keys(state.enabled).forEach(k => {
             if (typeof s.enabled[k] === 'boolean') state.enabled[k] = s.enabled[k];
@@ -772,9 +724,6 @@
         document.getElementById('initialAmount').value = state.initialAmount;
         document.getElementById('targetAmount').value = state.targetAmount;
         document.getElementById('btStart').value = state.btStart;
-        document.getElementById('wdInitial').value = state.wdInitial;
-        document.getElementById('wdAnnual').value = state.wdAnnual;
-        document.getElementById('wdYears').value = state.wdYears;
       } catch (e) {}
     }
 
@@ -1320,104 +1269,6 @@
       btx.fillText(fmt万円表示(vals[vals.length - 1]), lx - 8, ly - 4);
     }
 
-    // ── 取り崩しシミュレーション（出口） ─────────────────────────────────────
-    const wdCanvas = document.getElementById('wdChart');
-    const wtx = wdCanvas.getContext('2d');
-
-    function runWithdrawal(result) {
-      const N = 2000, T = state.wdYears;
-      const initial = state.wdInitial, draw = state.wdAnnual;
-      const r = result.pRet, s = result.pVol;
-      const m = r - 0.5 * s * s;
-      const byYear = Array.from({ length: T + 1 }, () => new Float64Array(N));
-      const SAMPLE = 30, samplePaths = [];
-      let survived = 0;
-      for (let p = 0; p < N; p++) {
-        let v = initial;
-        byYear[0][p] = v;
-        const path = [v];
-        let alive = true;
-        for (let t = 1; t <= T; t++) {
-          if (alive) {
-            v = v * Math.exp(m + s * gaussian()) - draw;  // 運用してから取り崩し
-            if (v <= 0) { v = 0; alive = false; }
-          }
-          byYear[t][p] = v;
-          path.push(v);
-        }
-        if (byYear[T][p] > 0) survived++;
-        if (p < SAMPLE) samplePaths.push(path);
-      }
-      const pct = (arr, q) => {
-        const a = Array.from(arr).sort((x, y) => x - y);
-        return a[Math.min(a.length - 1, Math.max(0, Math.round(q * (a.length - 1))))];
-      };
-      const p10 = [], p25 = [], p50 = [], p75 = [], p90 = [];
-      for (let t = 0; t <= T; t++) {
-        p10.push(pct(byYear[t], 0.10)); p25.push(pct(byYear[t], 0.25));
-        p50.push(pct(byYear[t], 0.50)); p75.push(pct(byYear[t], 0.75));
-        p90.push(pct(byYear[t], 0.90));
-      }
-      return { T, p10, p25, p50, p75, p90, samplePaths, successProb: survived / N, N,
-               drawRate: initial > 0 ? draw / initial : 0, medianEnd: p50[T] };
-    }
-
-    function drawWithdrawChart(wd) {
-      const W = wdCanvas.width, H = wdCanvas.height;
-      const A = { left: 76, right: 110, top: 24, bottom: 40 };
-      wtx.clearRect(0, 0, W, H); wtx.fillStyle = '#ffffff'; wtx.fillRect(0, 0, W, H);
-      const T = wd.T;
-      const yMax = Math.max(wd.p90[0], wd.p90[T], state.wdInitial) * 1.08;
-      const sx = t => A.left + (t / T) * (W - A.left - A.right);
-      const sy = v => H - A.bottom - (v / yMax) * (H - A.top - A.bottom);
-
-      wtx.font = '12px Segoe UI, sans-serif';
-      for (let i = 0; i <= 5; i++) {
-        const yv = (yMax / 5) * i, py = sy(yv);
-        wtx.strokeStyle = '#eef0f2'; wtx.lineWidth = 1;
-        wtx.beginPath(); wtx.moveTo(A.left, py); wtx.lineTo(W - A.right, py); wtx.stroke();
-        wtx.fillStyle = '#66737d'; wtx.textAlign = 'right'; wtx.textBaseline = 'middle';
-        wtx.fillText(fmt万円表示(yv), A.left - 8, py);
-      }
-      wtx.fillStyle = '#66737d'; wtx.textAlign = 'center'; wtx.textBaseline = 'top';
-      const xStep = T <= 20 ? 5 : 10;
-      for (let t = 0; t <= T; t += xStep) wtx.fillText(t + '年', sx(t), H - A.bottom + 8);
-
-      function band(lo, hi, alpha) {
-        wtx.fillStyle = `rgba(11,143,106,${alpha})`;
-        wtx.beginPath(); wtx.moveTo(sx(0), sy(hi[0]));
-        for (let t = 1; t <= T; t++) wtx.lineTo(sx(t), sy(hi[t]));
-        for (let t = T; t >= 0; t--) wtx.lineTo(sx(t), sy(lo[t]));
-        wtx.closePath(); wtx.fill();
-      }
-      band(wd.p10, wd.p90, 0.12);
-      band(wd.p25, wd.p75, 0.20);
-
-      wtx.strokeStyle = 'rgba(53,68,75,0.16)'; wtx.lineWidth = 1;
-      wd.samplePaths.forEach(path => {
-        wtx.beginPath();
-        path.forEach((v, t) => { const x = sx(t), y = sy(v); t === 0 ? wtx.moveTo(x, y) : wtx.lineTo(x, y); });
-        wtx.stroke();
-      });
-
-      wtx.strokeStyle = '#0b8f6a'; wtx.lineWidth = 3;
-      wtx.beginPath();
-      wd.p50.forEach((v, t) => { const x = sx(t), y = sy(v); t === 0 ? wtx.moveTo(x, y) : wtx.lineTo(x, y); });
-      wtx.stroke();
-
-      // 枯渇ライン（0）
-      wtx.strokeStyle = '#bd3b3b'; wtx.lineWidth = 1; wtx.setLineDash([5, 4]);
-      wtx.beginPath(); wtx.moveTo(A.left, sy(0)); wtx.lineTo(W - A.right, sy(0)); wtx.stroke();
-      wtx.setLineDash([]);
-
-      wtx.textAlign = 'left'; wtx.textBaseline = 'middle';
-      wtx.font = '11px Segoe UI, sans-serif'; wtx.fillStyle = '#0b8f6a';
-      wtx.fillText('上位10% ' + fmt万円表示(wd.p90[T]), W - A.right + 6, sy(wd.p90[T]));
-      wtx.fillText('下位10% ' + fmt万円表示(wd.p10[T]), W - A.right + 6, sy(wd.p10[T]));
-      wtx.font = '700 12px Segoe UI, sans-serif';
-      wtx.fillText('中央値 ' + fmt万円表示(wd.p50[T]), W - A.right + 6, sy(wd.p50[T]));
-    }
-
     // ── Event listeners ────────────────────────────────────────────────────
     document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1467,19 +1318,6 @@
     document.getElementById('targetAmount').addEventListener('input', e => {
       const v = Number(e.target.value);
       if (v > 0) { state.targetAmount = v; render(); }
-    });
-
-    document.getElementById('wdInitial').addEventListener('input', e => {
-      const v = Number(e.target.value);
-      if (v > 0) { state.wdInitial = v; render(); }
-    });
-    document.getElementById('wdAnnual').addEventListener('input', e => {
-      const v = Number(e.target.value);
-      if (v >= 0) { state.wdAnnual = v; render(); }
-    });
-    document.getElementById('wdYears').addEventListener('input', e => {
-      const v = Number(e.target.value);
-      if (v >= 1) { state.wdYears = v; render(); }
     });
 
     document.getElementById('assetUniverse').addEventListener('change', e => {
