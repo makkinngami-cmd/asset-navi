@@ -708,9 +708,11 @@
       drawDdChart(dd);
       if (dd) {
         document.getElementById('ddResult').innerHTML =
-          `この配分の<b>過去最大下落：<span style="color:#bd3b3b;font-size:16px">${(dd.maxDD * 100).toFixed(0)}%</span></b>` +
-          `（${dd.peakDate.slice(0, 7)}の高値 → ${dd.maxDate.slice(0, 7)}）` +
-          `<span style="color:#66737d">／ 現在 ${(dd.curDD * 100).toFixed(0)}%（高値から）</span>`;
+          `<b>全期間の最大下落（ピーク→ボトム）：` +
+          `<span style="color:#bd3b3b;font-size:16px">${(dd.maxDD * 100).toFixed(0)}%</span></b>` +
+          `<span style="color:#66737d">（${dd.peakDate.slice(0, 7)}の高値 → ${dd.maxDate.slice(0, 7)}の底）</span>` +
+          `　｜　<b>現在の下落（直近ピーク比）：` +
+          `<span style="color:${dd.curDD <= -0.01 ? '#bd3b3b' : '#0b8f6a'}">${(dd.curDD * 100).toFixed(0)}%</span></b>`;
       }
 
       // 設定をPC側（localStorage）に保存
