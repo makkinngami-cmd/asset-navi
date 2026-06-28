@@ -27,7 +27,11 @@
     .toc-top a::before { content: ''; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
       width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--btc)); }
     .toc-top a:hover { border-color: var(--btc); }
-    a.back { color: var(--blue); font-size: 13px; text-decoration: none; }
+    a.back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px;
+      padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px;
+      color: var(--blue); background: var(--panel); font-size: 13px; font-weight: 700;
+      text-decoration: none; }
+    a.back:hover { background: #eaf2fb; border-color: var(--blue); }
 
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(24,32,38,.06); margin-bottom: 16px; }
     .panel-head { padding: 12px 16px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); background: #fafbfc; }
