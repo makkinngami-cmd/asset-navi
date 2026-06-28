@@ -27,17 +27,6 @@
     .toc-top a::before { content: ''; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
       width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--blue)); }
     .toc-top a:hover { border-color: var(--blue); }
-    /* 目次：左固定レール（広い画面のみ） */
-    .toc-rail { display: none; }
-    @media (min-width: 1400px) {
-      .toc-rail { display: flex; flex-direction: column; gap: 4px; position: fixed;
-        left: 24px; top: 96px; z-index: 40; max-width: 150px; }
-      .toc-rail a { font-size: 13px; color: var(--muted); text-decoration: none;
-        padding: 4px 8px 4px 18px; border-left: 2px solid var(--line); position: relative; }
-      .toc-rail a::before { content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
-        width: 7px; height: 7px; border-radius: 50%; background: var(--dot, var(--blue)); }
-      .toc-rail a:hover { color: var(--ink); border-left-color: var(--blue); }
-    }
     .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 22px; line-height: 1.6; }
     a.back { color: var(--blue); font-size: 13px; text-decoration: none; }
 
@@ -250,17 +239,15 @@
 
   function buildToc(items) {
     const top = document.createElement('nav'); top.className = 'toc-top';
-    const rail = document.createElement('nav'); rail.className = 'toc-rail';
+    const rail = null;
     items.forEach(it => {
       const a = document.createElement('a');
       a.href = '#' + it.id; a.textContent = it.label;
       a.style.setProperty('--dot', it.color);
       top.appendChild(a);
-      rail.appendChild(a.cloneNode(true));
     });
     const container = document.getElementById('container');
     container.parentNode.insertBefore(top, container);
-    document.body.appendChild(rail);
   }
 })();
 </script>

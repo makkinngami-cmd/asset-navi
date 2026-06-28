@@ -27,17 +27,6 @@
     .toc-top a::before { content: ''; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
       width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--btc)); }
     .toc-top a:hover { border-color: var(--btc); }
-    /* 目次：左固定レール（広い画面のみ） */
-    .toc-rail { display: none; }
-    @media (min-width: 1400px) {
-      .toc-rail { display: flex; flex-direction: column; gap: 4px; position: fixed;
-        left: 24px; top: 96px; z-index: 40; max-width: 150px; }
-      .toc-rail a { font-size: 13px; color: var(--muted); text-decoration: none;
-        padding: 4px 8px 4px 18px; border-left: 2px solid var(--line); position: relative; }
-      .toc-rail a::before { content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
-        width: 7px; height: 7px; border-radius: 50%; background: var(--dot, var(--btc)); }
-      .toc-rail a:hover { color: var(--ink); border-left-color: var(--btc); }
-    }
     a.back { color: var(--blue); font-size: 13px; text-decoration: none; }
 
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(24,32,38,.06); margin-bottom: 16px; }
@@ -283,17 +272,15 @@
         id: 'sec-' + k, label: alts[k].label.replace(/\s*\(.*\)/, ''), color: alts[k].color
       })));
     const top = document.createElement('nav'); top.className = 'toc-top';
-    const rail = document.createElement('nav'); rail.className = 'toc-rail';
+    const rail = null; // 左レール廃止（上部スティッキーのみ）
     items.forEach(it => {
       const a = document.createElement('a');
       a.href = '#' + it.id; a.textContent = it.label;
       a.style.setProperty('--dot', it.color);
       top.appendChild(a);
-      rail.appendChild(a.cloneNode(true));
     });
     const anchor = document.getElementById('sec-btc');
     anchor.parentNode.insertBefore(top, anchor);
-    document.body.appendChild(rail);
   })();
 
   // === インタラクティブ比較チャート ===
