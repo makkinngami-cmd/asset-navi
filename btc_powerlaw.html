@@ -11,10 +11,33 @@
       font-family: "Segoe UI", "Yu Gothic", "Meiryo", system-ui, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--ink); }
     main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
     h1 { font-size: 26px; margin-bottom: 4px; }
     .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 22px; line-height: 1.6; }
+    .sec-head { scroll-margin-top: 60px; }
+    /* 目次：上部スティッキー（全幅で常時表示） */
+    .toc-top { position: sticky; top: 0; z-index: 40; display: flex; gap: 8px;
+      padding: 10px 0; margin-bottom: 14px; overflow-x: auto;
+      background: rgba(246,247,249,.96); border-bottom: 1px solid var(--line); }
+    .toc-top a { flex: 0 0 auto; font-size: 13px; color: var(--ink); text-decoration: none;
+      padding: 5px 12px 5px 22px; border: 1px solid var(--line); border-radius: 999px;
+      background: #fff; white-space: nowrap; position: relative; }
+    .toc-top a::before { content: ''; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+      width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--btc)); }
+    .toc-top a:hover { border-color: var(--btc); }
+    /* 目次：左固定レール（広い画面のみ） */
+    .toc-rail { display: none; }
+    @media (min-width: 1400px) {
+      .toc-rail { display: flex; flex-direction: column; gap: 4px; position: fixed;
+        left: 24px; top: 96px; z-index: 40; max-width: 150px; }
+      .toc-rail a { font-size: 13px; color: var(--muted); text-decoration: none;
+        padding: 4px 8px 4px 18px; border-left: 2px solid var(--line); position: relative; }
+      .toc-rail a::before { content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
+        width: 7px; height: 7px; border-radius: 50%; background: var(--dot, var(--btc)); }
+      .toc-rail a:hover { color: var(--ink); border-left-color: var(--btc); }
+    }
     a.back { color: var(--blue); font-size: 13px; text-decoration: none; }
 
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(24,32,38,.06); margin-bottom: 16px; }
@@ -49,7 +72,7 @@
   <h1 style="margin-top:8px">暗号資産トレンド解析</h1>
   <p class="subtitle">暗号資産ごとに最適なモデルで長期トレンドを当てはめ、将来の年率リターンと標準偏差の<strong>参考値</strong>を出します。BTCはパワーロー（べき乗則）、ETH・XRPは指数トレンド（log-linear）を使用。</p>
 
-  <h2 style="color:var(--btc)">ビットコイン (BTC) <span style="font-size:13px;color:var(--muted)">(BTC-USD)</span></h2>
+  <h2 id="sec-btc" class="sec-head" style="color:var(--btc)">ビットコイン (BTC) <span style="font-size:13px;color:var(--muted)">(BTC-USD)</span></h2>
 
   <!-- サマリー -->
   <div class="panel">
@@ -181,7 +204,7 @@
     });
 
     const html2 = `
-      <h2 style="color:${ix.color};margin-top:32px">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
+      <h2 id="sec-${key}" class="sec-head" style="color:${ix.color};margin-top:32px">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
       <div class="panel">
         <div class="panel-head">モデルの要点（指数トレンド）</div>
         <div class="panel-body">
@@ -252,6 +275,26 @@
     `;
     altContainer.insertAdjacentHTML('beforeend', html2);
   });
+
+  // 目次（BTC＋アルト）を生成
+  (function buildToc() {
+    const items = [{ id: 'sec-btc', label: 'ビットコイン', color: 'var(--btc)' }]
+      .concat(Object.keys(alts).map(k => ({
+        id: 'sec-' + k, label: alts[k].label.replace(/\s*\(.*\)/, ''), color: alts[k].color
+      })));
+    const top = document.createElement('nav'); top.className = 'toc-top';
+    const rail = document.createElement('nav'); rail.className = 'toc-rail';
+    items.forEach(it => {
+      const a = document.createElement('a');
+      a.href = '#' + it.id; a.textContent = it.label;
+      a.style.setProperty('--dot', it.color);
+      top.appendChild(a);
+      rail.appendChild(a.cloneNode(true));
+    });
+    const anchor = document.getElementById('sec-btc');
+    anchor.parentNode.insertBefore(top, anchor);
+    document.body.appendChild(rail);
+  })();
 
   // === インタラクティブ比較チャート ===
   const btcW = (d.btc_weekly_prices || []).map(r => ({d: new Date(r[0]), p: r[1]}));

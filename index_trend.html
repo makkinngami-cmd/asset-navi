@@ -11,10 +11,33 @@
       font-family: "Segoe UI", "Yu Gothic", "Meiryo", system-ui, sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--ink); }
     main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
     h1 { font-size: 26px; margin-bottom: 4px; }
     h2 { font-size: 20px; margin: 28px 0 12px; }
+    .sec-head { scroll-margin-top: 60px; }
+    /* 目次：上部スティッキー（全幅で常時表示） */
+    .toc-top { position: sticky; top: 0; z-index: 40; display: flex; gap: 8px;
+      padding: 10px 0; margin-bottom: 14px; overflow-x: auto;
+      background: rgba(246,247,249,.96); border-bottom: 1px solid var(--line); }
+    .toc-top a { flex: 0 0 auto; font-size: 13px; color: var(--ink); text-decoration: none;
+      padding: 5px 12px 5px 22px; border: 1px solid var(--line); border-radius: 999px;
+      background: #fff; white-space: nowrap; position: relative; }
+    .toc-top a::before { content: ''; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+      width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--blue)); }
+    .toc-top a:hover { border-color: var(--blue); }
+    /* 目次：左固定レール（広い画面のみ） */
+    .toc-rail { display: none; }
+    @media (min-width: 1400px) {
+      .toc-rail { display: flex; flex-direction: column; gap: 4px; position: fixed;
+        left: 24px; top: 96px; z-index: 40; max-width: 150px; }
+      .toc-rail a { font-size: 13px; color: var(--muted); text-decoration: none;
+        padding: 4px 8px 4px 18px; border-left: 2px solid var(--line); position: relative; }
+      .toc-rail a::before { content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
+        width: 7px; height: 7px; border-radius: 50%; background: var(--dot, var(--blue)); }
+      .toc-rail a:hover { color: var(--ink); border-left-color: var(--blue); }
+    }
     .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 22px; line-height: 1.6; }
     a.back { color: var(--blue); font-size: 13px; text-decoration: none; }
 
@@ -157,7 +180,7 @@
       </div>` : '';
 
     const html = `
-      <h2 style="color:${ix.color}">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
+      <h2 id="sec-${key}" class="sec-head" style="color:${ix.color}">${ix.label} <span style="font-size:13px;color:var(--muted)">(${ix.ticker})</span></h2>
       ${regimeNote}
       <div class="panel">
         <div class="panel-head">モデルの要点</div>
@@ -217,8 +240,28 @@
     root.insertAdjacentHTML('beforeend', html);
   });
 
+  // 目次（左固定レール＋上部スティッキー）を生成
+  buildToc(Object.keys(d.indices).map(k => ({
+    id: 'sec-' + k, label: d.indices[k].label, color: d.indices[k].color
+  })));
+
   document.getElementById('disclaimer').textContent =
     d.disclaimer + '　（生成: ' + d.generated_at + '）';
+
+  function buildToc(items) {
+    const top = document.createElement('nav'); top.className = 'toc-top';
+    const rail = document.createElement('nav'); rail.className = 'toc-rail';
+    items.forEach(it => {
+      const a = document.createElement('a');
+      a.href = '#' + it.id; a.textContent = it.label;
+      a.style.setProperty('--dot', it.color);
+      top.appendChild(a);
+      rail.appendChild(a.cloneNode(true));
+    });
+    const container = document.getElementById('container');
+    container.parentNode.insertBefore(top, container);
+    document.body.appendChild(rail);
+  }
 })();
 </script>
 </body>
