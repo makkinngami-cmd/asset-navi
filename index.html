@@ -152,6 +152,13 @@
       background: var(--blue, #2364aa); color: #fff; display: inline-flex;
       align-items: center; justify-content: center; font-size: 12px; }
     @media (max-width: 720px) { .onboard li { flex-basis: 100%; } }
+    .tabs { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 2px solid var(--line); }
+    .tabs .tab { appearance: none; border: none; background: none; cursor: pointer;
+      padding: 10px 18px; font-size: 14px; font-weight: 700; color: var(--muted, #66737d);
+      border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .tabs .tab:hover { color: var(--ink, #172026); }
+    .tabs .tab.active { color: var(--blue, #2364aa); border-bottom-color: var(--blue, #2364aa); }
+    @media (max-width: 560px) { .tabs .tab { flex: 1; padding: 10px 6px; font-size: 13px; } }
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -279,7 +286,13 @@
         <li><b>3</b> 左のフロンティア図と下の<strong>将来シミュ</strong>で結果を見る</li>
       </ol>
 
-      <section class="grid">
+      <div class="tabs">
+        <button class="tab active" type="button" data-tabbtn="design">設計する</button>
+        <button class="tab" type="button" data-tabbtn="verify">過去で検証</button>
+        <button class="tab" type="button" data-tabbtn="learn">仕組みを学ぶ</button>
+      </div>
+
+      <section class="grid" data-tab="design">
         <!-- Left: Frontier Chart -->
         <div class="panel">
           <div class="panel-head">
@@ -360,7 +373,7 @@
         </div>
       </section>
 
-      <section class="lower">
+      <section class="lower" data-tab="design">
         <div class="panel">
           <div class="panel-head">
             <h2 id="resultsTitle">10年後のシミュレーション（初期投資100万円）</h2>
@@ -399,7 +412,7 @@
         </div>
       </section>
 
-      <section class="lower" style="grid-template-columns:1fr">
+      <section class="lower" data-tab="design" style="grid-template-columns:1fr">
         <div class="panel">
           <div class="panel-head">
             <h2>モンテカルロ・シミュレーション（2000シナリオ）</h2>
@@ -419,6 +432,9 @@
             </p>
           </div>
         </div>
+      </section>
+
+      <section class="lower" data-tab="learn" style="grid-template-columns:1fr">
         <div class="panel">
           <div class="panel-head">
             <h2>資産間の相関ヒートマップ</h2>
@@ -435,7 +451,7 @@
         </div>
       </section>
 
-      <section class="lower" style="grid-template-columns:1fr">
+      <section class="lower" data-tab="verify" style="grid-template-columns:1fr">
         <div class="panel">
           <div class="panel-head">
             <h2>過去リプレイ（バックテスト）</h2>
@@ -463,7 +479,7 @@
         </div>
       </section>
 
-      <section class="lower" style="grid-template-columns:1fr">
+      <section class="lower" data-tab="verify" style="grid-template-columns:1fr">
         <div class="panel">
           <div class="panel-head">
             <h2>最大下落（ドローダウン）— いまの配分の過去</h2>
@@ -480,7 +496,7 @@
         </div>
       </section>
 
-      <section class="lower" style="grid-template-columns:1fr">
+      <section class="lower" data-tab="verify" style="grid-template-columns:1fr">
         <div class="panel">
           <div class="panel-head">
             <h2>資産クイルト（年別リターン順位表）</h2>
@@ -496,7 +512,7 @@
         </div>
       </section>
 
-      <section class="lower" style="grid-template-columns:1fr">
+      <section class="lower" data-tab="learn" style="grid-template-columns:1fr">
         <div class="panel">
           <div class="panel-head">
             <h2>MVOの罠：期待リターンを少し変えると最適配分が激変する</h2>
@@ -633,6 +649,7 @@
     // ── App state ──────────────────────────────────────────────────────────
     const state = {
       preset: 'balanced',
+      tab: 'design',        // 表示中のタブ
       btcPct: 0,
       cashPct: 0,           // 現金（無リスク資産）比率＝CML上のどこに座るか
       horizon: 10,
@@ -871,6 +888,7 @@
         if (!raw) return;
         const s = JSON.parse(raw);
         if (s.preset && PRESETS[s.preset]) state.preset = s.preset;
+        if (['design', 'verify', 'learn'].includes(s.tab)) state.tab = s.tab;
         if (typeof s.btcPct === 'number') state.btcPct = s.btcPct;
         if (typeof s.cashPct === 'number') state.cashPct = s.cashPct;
         if (typeof s.horizon === 'number') state.horizon = s.horizon;
@@ -1661,6 +1679,20 @@
     }
 
     // ── Event listeners ────────────────────────────────────────────────────
+    // タブ切替（設計する / 過去で検証 / 仕組みを学ぶ）
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(b =>
+        b.classList.toggle('active', b.dataset.tabbtn === name));
+      document.querySelectorAll('section[data-tab]').forEach(s => {
+        s.style.display = (s.dataset.tab === name) ? '' : 'none';
+      });
+      state.tab = name;
+      saveState();
+    }
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tabbtn));
+    });
+
     document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.preset-btn[data-preset]').forEach(b => b.classList.remove('active'));
@@ -1779,6 +1811,7 @@
     renderQuilt();
     initBacktestSlider();
     render();
+    switchTab(state.tab);   // 初期タブを反映（チャートはrenderで描画済み）
   </script>
 </body>
 </html>
