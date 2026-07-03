@@ -238,6 +238,14 @@
       .chart-wrap { min-height: 300px; }
       canvas { height: 300px; }
       .metrics { grid-template-columns: 1fr 1fr; }
+      /* iOSのフォーカス時自動ズームを防ぐ（16px以上） */
+      input[type="number"], input[type="text"], select, textarea { font-size: 16px; }
+      /* 横に広い表はスクロールできることを示す */
+      .corr-heatmap, .quilt { position: relative; }
+      .corr-heatmap::after, .quilt::after {
+        content: '→ 横にスクロールできます'; display: block;
+        font-size: 11px; color: var(--muted); text-align: right; margin-top: 4px;
+      }
     }
   </style>
 </head>
@@ -961,6 +969,14 @@
     const ctx    = canvas.getContext('2d');
     const AREA   = { left: 82, right: 48, top: 30, bottom: 64 };
 
+    // 表示幅に合わせてcanvasの実サイズを設定（縮小せず実寸で描画＝モバイルでも文字が読める）
+    function fitCanvas(cv) {
+      const w = cv.clientWidth, h = cv.clientHeight;
+      if (w <= 0 || h <= 0) return false;   // 非表示タブ内はスキップ
+      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      return true;
+    }
+
     // Compute axis scale dynamically based on content
     function getAxis(btcRet100) {
       const maxRisk = state.btcPct >= 50 ? 80 : (state.btcPct > 0 ? 52 : 28);
@@ -1088,6 +1104,7 @@
     }
 
     function drawChart(result) {
+      if (!fitCanvas(canvas)) return;
       const btcRet100 = result.btcReturn * 100;
       const axis = getAxis(btcRet100);
       const sx = makeSx(axis);
@@ -1292,6 +1309,7 @@
     }
 
     function drawMcChart(mc) {
+      if (!fitCanvas(mcCanvas)) return;
       const W = mcCanvas.width, H = mcCanvas.height;
       const A = { left: 76, right: 110, top: 24, bottom: 40 };
       mctx.clearRect(0, 0, W, H);
@@ -1410,6 +1428,7 @@
     }
 
     function drawBtChart(bt) {
+      if (!fitCanvas(btCanvas)) return;
       const W = btCanvas.width, H = btCanvas.height;
       const A = { left: 76, right: 96, top: 24, bottom: 40 };
       btx.clearRect(0, 0, W, H);
@@ -1497,6 +1516,7 @@
     }
 
     function drawDdChart(dd) {
+      if (!fitCanvas(ddCanvas)) return;
       const W = ddCanvas.width, H = ddCanvas.height;
       const A = { left: 60, right: 24, top: 20, bottom: 36 };
       dtx.clearRect(0, 0, W, H); dtx.fillStyle = '#ffffff'; dtx.fillRect(0, 0, W, H);
@@ -1634,6 +1654,7 @@
 
     function drawMvoChart() {
       document.getElementById('mvoValue').textContent = state.mvoBtcRet + '%';
+      if (!fitCanvas(mvoCanvas)) return;
       const W = mvoCanvas.width, H = mvoCanvas.height;
       const A = { left: 56, right: 24, top: 20, bottom: 38 };
       const xMax = 60;  // 仮定するBTC期待リターンの上限(%)
@@ -1695,8 +1716,15 @@
         s.style.display = (s.dataset.tab === name) ? '' : 'none';
       });
       state.tab = name;
-      saveState();
+      render();   // 表示になったチャートを実サイズで描き直す
     }
+
+    // 画面回転・リサイズでチャートを再フィット
+    let _rzTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(_rzTimer);
+      _rzTimer = setTimeout(render, 150);
+    });
     document.querySelectorAll('.tab').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.dataset.tabbtn));
     });
