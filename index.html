@@ -140,6 +140,9 @@
       font-size: 12px; color: var(--muted);
     }
     .mini-metrics strong { font-size: 13px; color: var(--ink); margin-left: 4px; }
+    .eval-badge { display: inline-block; margin-left: 5px; padding: 1px 6px; border-radius: 999px;
+      font-size: 10px; font-weight: 700; font-style: normal; vertical-align: middle; }
+    .eval-badge:empty { display: none; }
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -334,9 +337,9 @@
               </div>
             </div>
             <div class="mini-metrics">
-              <span><span class="term" tabindex="0" data-tip="1年あたりに平均で期待されるリターン（年率）。前提に基づく推計で、毎年この通りにはなりません。">期待リターン</span><strong id="returnVal">--%</strong></span>
-              <span><span class="term" tabindex="0" data-tip="リターンのブレの大きさ＝標準偏差(σ)。大きいほど上下に大きく振れます。ざっくり約2/3の年が「平均±リスク」に収まる目安。">リスク</span><strong id="riskVal">--%</strong></span>
-              <span><span class="term" tabindex="0" data-tip="シャープレシオ＝(リターン−無リスク金利)÷リスク。1単位のリスクで何%余分に稼げるか。高いほどリスク効率が良い。">Sharpe</span><strong id="sharpeVal">--</strong></span>
+              <span><span class="term" tabindex="0" data-tip="1年あたりに平均で期待されるリターン（年率）。前提に基づく推計で、毎年この通りにはなりません。">期待リターン</span><strong id="returnVal">--%</strong><em class="eval-badge" id="returnBadge"></em></span>
+              <span><span class="term" tabindex="0" data-tip="リターンのブレの大きさ＝標準偏差(σ)。大きいほど上下に大きく振れます。ざっくり約2/3の年が「平均±リスク」に収まる目安。">リスク</span><strong id="riskVal">--%</strong><em class="eval-badge" id="riskBadge"></em></span>
+              <span><span class="term" tabindex="0" data-tip="シャープレシオ＝(リターン−無リスク金利)÷リスク。1単位のリスクで何%余分に稼げるか。高いほどリスク効率が良い。">Sharpe</span><strong id="sharpeVal">--</strong><em class="eval-badge" id="sharpeBadge"></em></span>
             </div>
           </div>
         </div>
@@ -704,6 +707,38 @@
       return man.toLocaleString() + '万円';
     }
 
+    // ── 数値の意味づけ（評価バッジ） ─────────────────────────────────────────
+    const EV_GOOD = { bg: '#e3f3ee', fg: '#0b8f6a' };
+    const EV_OK   = { bg: '#fbeede', fg: '#9a5e10' };
+    const EV_WARN = { bg: '#f7e2e2', fg: '#bd3b3b' };
+    const mkEv = (t, c) => ({ t, bg: c.bg, fg: c.fg });
+
+    function evalSharpe(s) {
+      if (s >= 0.9) return mkEv('優秀', EV_GOOD);
+      if (s >= 0.5) return mkEv('良好', EV_GOOD);
+      if (s >= 0.25) return mkEv('平均的', EV_OK);
+      return mkEv('低い', EV_WARN);
+    }
+    function evalRisk(v) {  // v: % 年率
+      if (v < 8) return mkEv('変動小', EV_GOOD);
+      if (v < 16) return mkEv('中くらい', EV_OK);
+      if (v < 28) return mkEv('大きい', EV_WARN);
+      return mkEv('とても大きい', EV_WARN);
+    }
+    function evalReturn(r) {  // r: % 年率
+      if (r >= 8) return mkEv('高め', EV_GOOD);
+      if (r >= 4) return mkEv('標準的', EV_OK);
+      return mkEv('控えめ', EV_OK);
+    }
+    function setEvalBadge(id, ev) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (!ev) { el.textContent = ''; return; }
+      el.textContent = ev.t;
+      el.style.background = ev.bg;
+      el.style.color = ev.fg;
+    }
+
     // ── Render ─────────────────────────────────────────────────────────────
     function render() {
       const result = computePortfolio();
@@ -725,6 +760,11 @@
       document.getElementById('returnVal').textContent = (result.pRet * 100).toFixed(1) + '%';
       document.getElementById('riskVal').textContent   = (result.pVol * 100).toFixed(1) + '%';
       document.getElementById('sharpeVal').textContent = result.sharpe.toFixed(2);
+
+      // 数値の意味づけ（評価バッジ）
+      setEvalBadge('sharpeBadge', evalSharpe(result.sharpe));
+      setEvalBadge('riskBadge',   evalRisk(result.pVol * 100));
+      setEvalBadge('returnBadge', evalReturn(result.pRet * 100));
 
       // Results header
       document.getElementById('resultsTitle').textContent =
