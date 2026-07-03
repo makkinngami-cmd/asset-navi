@@ -143,6 +143,15 @@
     .eval-badge { display: inline-block; margin-left: 5px; padding: 1px 6px; border-radius: 999px;
       font-size: 10px; font-weight: 700; font-style: normal; vertical-align: middle; }
     .eval-badge:empty { display: none; }
+    .onboard { list-style: none; display: flex; gap: 10px; flex-wrap: wrap;
+      margin: 0 0 16px; padding: 12px 14px; background: #eef4fb;
+      border: 1px solid #d5e3f2; border-radius: 10px; }
+    .onboard li { display: flex; align-items: center; gap: 8px; flex: 1 1 200px;
+      font-size: 13px; color: #35444b; }
+    .onboard li b { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--blue, #2364aa); color: #fff; display: inline-flex;
+      align-items: center; justify-content: center; font-size: 12px; }
+    @media (max-width: 720px) { .onboard li { flex-basis: 100%; } }
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -263,6 +272,12 @@
           <p class="subtitle">タイプとBTC比率を選ぶだけで、リターン・リスク・将来の範囲を試算します。</p>
         </div>
       </div>
+
+      <ol class="onboard">
+        <li><b>1</b> 右で<strong>投資タイプ</strong>を選ぶ（保守/標準/積極）</li>
+        <li><b>2</b> <strong>BTC・現金の比率</strong>や使うアセットを動かす</li>
+        <li><b>3</b> 左のフロンティア図と下の<strong>将来シミュ</strong>で結果を見る</li>
+      </ol>
 
       <section class="grid">
         <!-- Left: Frontier Chart -->
