@@ -396,7 +396,7 @@
             <div class="metrics" style="margin-top:10px">
               <div class="metric danger" style="grid-column:1/4">
                 <span>最大下落の目安（想定：最悪の1年）</span>
-                <strong id="drawdownVal">--%</strong>
+                <strong id="drawdownVal">--%</strong><em class="eval-badge" id="drawdownBadge"></em>
               </div>
             </div>
             <div class="insight" id="insight">タイプとBTC比率を選んでください。</div>
@@ -762,6 +762,13 @@
       if (r >= 4) return mkEv('標準的', EV_OK);
       return mkEv('控えめ', EV_OK);
     }
+    function evalDrawdown(d) {  // d: 負の%（例 -30）
+      const a = Math.abs(d);
+      if (a < 15) return mkEv('軽い', EV_GOOD);
+      if (a < 30) return mkEv('普通', EV_OK);
+      if (a < 50) return mkEv('大きい', EV_WARN);
+      return mkEv('深刻', EV_WARN);
+    }
     function setEvalBadge(id, ev) {
       const el = document.getElementById(id);
       if (!el) return;
@@ -807,6 +814,7 @@
       document.getElementById('highVal').textContent     = fmt万円(result.high);
       document.getElementById('lowVal').textContent      = fmt万円(result.low);
       document.getElementById('drawdownVal').textContent = (result.drawdown * 100).toFixed(0) + '%';
+      setEvalBadge('drawdownBadge', evalDrawdown(result.drawdown * 100));
 
       // Insight
       const p = PRESETS[state.preset];
