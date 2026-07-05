@@ -159,6 +159,18 @@
     .tabs .tab:hover { color: var(--ink, #172026); }
     .tabs .tab.active { color: var(--blue, #2364aa); border-bottom-color: var(--blue, #2364aa); }
     @media (max-width: 560px) { .tabs .tab { flex: 1; padding: 10px 6px; font-size: 13px; } }
+    .reset-btn { flex: 0 0 auto; border: 1px solid var(--line); background: #fbfcfc;
+      color: #4d5a61; border-radius: 999px; padding: 6px 12px; font-size: 12px;
+      font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .reset-btn:hover { background: #eef0f2; border-color: #b0b8bd; }
+    .compare-link { margin-top: 6px; align-self: flex-start; border: none; background: none;
+      color: var(--blue, #2364aa); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 0; }
+    .preset-compare { margin-top: 8px; overflow-x: auto; }
+    .preset-compare table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .preset-compare th, .preset-compare td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .preset-compare th:first-child, .preset-compare td:first-child { text-align: left; color: #66737d; }
+    .preset-compare th { font-weight: 700; color: #35444b; }
+    .preset-compare td.current-col, .preset-compare th.current-col { background: #eaf2fb; }
     .metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -322,8 +334,9 @@
 
         <!-- Right: Controls -->
         <div class="panel">
-          <div class="panel-head">
+          <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
             <h2>設計パラメータ</h2>
+            <button id="resetBtn" type="button" class="reset-btn">↺ 初期設定に戻す</button>
           </div>
           <div class="panel-body">
             <div class="controls">
@@ -334,6 +347,8 @@
                   <button class="preset-btn active" data-preset="balanced" type="button">標準</button>
                   <button class="preset-btn" data-preset="growth" type="button">積極</button>
                 </div>
+                <button id="presetCompareBtn" type="button" class="compare-link">3タイプを比較 ▾</button>
+                <div id="presetCompare" class="preset-compare" hidden></div>
               </div>
               <div class="control-row">
                 <div class="control-meta">
@@ -668,6 +683,7 @@
       mvoBtcRet: 25,        // MVOの罠デモ：BTC期待リターンの手動仮定（%）
       enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true, em: true, commodity: true, japan: true, nasdaq100: true, sox: true }
     };
+    const DEFAULT_STATE = JSON.parse(JSON.stringify(state));  // リセット用の初期値スナップショット
 
     // ── Core computation ───────────────────────────────────────────────────
     function getBtcReturn(horizon) {
@@ -918,19 +934,26 @@
             if (typeof s.enabled[k] === 'boolean') state.enabled[k] = s.enabled[k];
           });
         }
-        // 画面の入力欄を復元した値に同期
-        document.querySelectorAll('.preset-btn[data-preset]').forEach(b =>
-          b.classList.toggle('active', b.dataset.preset === state.preset));
-        document.querySelectorAll('.bt-cur').forEach(b =>
-          b.classList.toggle('active', b.dataset.cur === state.btCurrency));
-        document.getElementById('btcSlider').value = state.btcPct;
-        document.getElementById('cashSlider').value = state.cashPct;
-        document.getElementById('horizonSlider').value = state.horizon;
-        document.getElementById('initialAmount').value = state.initialAmount;
-        document.getElementById('targetAmount').value = state.targetAmount;
-        document.getElementById('btStart').value = state.btStart;
-        document.getElementById('mvoSlider').value = state.mvoBtcRet;
+        syncControlsToState();
       } catch (e) {}
+    }
+
+    // stateの現在値を画面の入力欄に反映する（loadState/リセット共通）
+    function syncControlsToState() {
+      document.querySelectorAll('.preset-btn[data-preset]').forEach(b =>
+        b.classList.toggle('active', b.dataset.preset === state.preset));
+      document.querySelectorAll('.bt-cur').forEach(b =>
+        b.classList.toggle('active', b.dataset.cur === state.btCurrency));
+      document.getElementById('btcSlider').value = state.btcPct;
+      document.getElementById('cashSlider').value = state.cashPct;
+      document.getElementById('horizonSlider').value = state.horizon;
+      document.getElementById('initialAmount').value = state.initialAmount;
+      document.getElementById('targetAmount').value = state.targetAmount;
+      document.getElementById('btStart').value = state.btStart;
+      document.getElementById('mvoSlider').value = state.mvoBtcRet;
+      document.querySelectorAll('#assetUniverse input[type=checkbox]').forEach(cb => {
+        cb.checked = !!state.enabled[cb.dataset.asset];
+      });
     }
 
     function renderAssetUniverse() {
@@ -1729,12 +1752,59 @@
       btn.addEventListener('click', () => switchTab(btn.dataset.tabbtn));
     });
 
+    // ── 初期設定に戻す ───────────────────────────────────────────────────────
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      Object.assign(state, JSON.parse(JSON.stringify(DEFAULT_STATE)));
+      syncControlsToState();
+      switchTab(state.tab);   // render()も内部で呼ばれる
+      renderPresetCompare();  // 表示中なら数値も更新
+    });
+
+    // ── プリセット比較（保守/標準/積極を横並び） ─────────────────────────────
+    function renderPresetCompare() {
+      const box = document.getElementById('presetCompare');
+      if (box.hidden) return;
+      const order = ['conservative', 'balanced', 'growth'];
+      const stats = order.map(key => {
+        const w = {};
+        let baseSum = 0;
+        ASSET_KEYS.forEach(k => { if (k !== 'btc' && state.enabled[k]) baseSum += (PRESETS[key].weights[k] || 0); });
+        const scale = baseSum > 0 ? 1 / baseSum : 0;
+        ASSET_KEYS.forEach(k => { w[k] = k === 'btc' ? 0 : (state.enabled[k] ? (PRESETS[key].weights[k] || 0) * scale : 0); });
+        const s = portfolioStats(w);
+        return { key, label: PRESETS[key].label, ret: s.pRet * 100, vol: s.pVol * 100 };
+      });
+      const cur = state.preset;
+      const row = (label, fmt) => {
+        let html = `<tr><th>${label}</th>`;
+        stats.forEach(s => {
+          html += `<td class="${s.key === cur ? 'current-col' : ''}">${fmt(s)}</td>`;
+        });
+        return html + '</tr>';
+      };
+      let html = '<table><thead><tr><th></th>';
+      stats.forEach(s => { html += `<th class="${s.key === cur ? 'current-col' : ''}">${s.label}${s.key === cur ? '（現在）' : ''}</th>`; });
+      html += '</tr></thead><tbody>';
+      html += row('期待リターン', s => s.ret.toFixed(1) + '%');
+      html += row('リスク', s => s.vol.toFixed(1) + '%');
+      html += row('Sharpe', s => ((s.ret - RF * 100) / s.vol).toFixed(2));
+      html += '</tbody></table>';
+      box.innerHTML = html;
+    }
+    document.getElementById('presetCompareBtn').addEventListener('click', () => {
+      const box = document.getElementById('presetCompare');
+      box.hidden = !box.hidden;
+      document.getElementById('presetCompareBtn').textContent = box.hidden ? '3タイプを比較 ▾' : '3タイプを比較 ▴';
+      if (!box.hidden) renderPresetCompare();
+    });
+
     document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.preset-btn[data-preset]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.preset = btn.dataset.preset;
         render();
+        renderPresetCompare();
       });
     });
 
