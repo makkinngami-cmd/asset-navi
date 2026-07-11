@@ -4,6 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>暗号資産トレンド解析 — アセットナビ</title>
+  <meta name="description" content="BTC（パワーロー）・ETH/XRP/SOL/DOGE（指数トレンド）の長期トレンドと期待リターンの参考値。BTC半減期サイクルとの比較も。" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f7931a'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='20' font-weight='700' fill='white' text-anchor='middle'%3E%E2%82%BF%3C/text%3E%3C/svg%3E" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="暗号資産トレンド解析 — アセットナビ" />
+  <meta property="og:description" content="BTC・ETH・XRP・SOL・DOGEの長期トレンドと期待リターンの参考値。" />
+  <meta property="og:url" content="https://makkinngami-cmd.github.io/asset-navi/btc_powerlaw.html" />
+  <meta property="og:image" content="https://makkinngami-cmd.github.io/asset-navi/btc_powerlaw_log.png" />
+  <meta name="twitter:card" content="summary_large_image" />
   <style>
     :root {
       --bg: #f6f7f9; --panel: #ffffff; --ink: #172026; --muted: #66737d;
@@ -37,6 +45,13 @@
     .panel-head { padding: 12px 16px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); background: #fafbfc; }
     .panel-body { padding: 16px; }
     img { display: block; width: 100%; height: auto; }
+    /* モバイル：グラフを無理に縮小せず文字が読める幅を確保し、横スクロールに逃がす */
+    @media (max-width: 760px) {
+      .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .img-scroll img, .img-scroll canvas { width: auto !important; min-width: 700px; height: auto !important; }
+      .img-scroll::after { content: '→ 横にスクロールできます'; display: block;
+        font-size: 11px; color: var(--muted); text-align: right; padding: 4px 12px 8px 0; }
+    }
 
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     @media (max-width: 760px) { .metrics { grid-template-columns: 1fr 1fr; } }
@@ -99,15 +114,15 @@
   <!-- グラフ -->
   <div class="panel">
     <div class="panel-head">① 両対数（log-log）：底・天井ラインのフィット</div>
-    <img src="btc_powerlaw_log.png" alt="両対数グラフ" />
+    <div class="img-scroll"><img src="btc_powerlaw_log.png" alt="両対数グラフ" /></div>
   </div>
   <div class="panel">
     <div class="panel-head">② 時間軸・対数スケール：半減期サイクルと将来予測</div>
-    <img src="btc_powerlaw_time.png" alt="時間軸対数グラフ" />
+    <div class="img-scroll"><img src="btc_powerlaw_time.png" alt="時間軸対数グラフ" /></div>
   </div>
   <div class="panel">
     <div class="panel-head">③ リニアスケール：現在価格基準の倍率</div>
-    <img src="btc_powerlaw_linear.png" alt="リニアスケールグラフ" />
+    <div class="img-scroll"><img src="btc_powerlaw_linear.png" alt="リニアスケールグラフ" /></div>
   </div>
 
   <!-- 将来テーブル -->
@@ -227,11 +242,11 @@
       </div>
       <div class="panel">
         <div class="panel-head">① 指数トレンド＋σチャンネル（対数スケール）</div>
-        <img src="${ix.charts[0]}" alt="${ix.label} トレンド" />
+        <div class="img-scroll"><img src="${ix.charts[0]}" alt="${ix.label} トレンド" /></div>
       </div>
       <div class="panel">
         <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
-        <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
+        <div class="img-scroll"><img src="${ix.charts[1]}" alt="${ix.label} 乖離" /></div>
       </div>
       <div class="panel">
         <div class="panel-head">③ BTC比較（起点スライダーで変更可）</div>
@@ -241,7 +256,9 @@
             <input type="range" id="slider-${key}" style="flex:1;min-width:200px" />
             <span id="slider-label-${key}" style="font-size:13px;font-weight:700;min-width:80px"></span>
           </div>
-          <canvas id="canvas-${key}" width="1100" height="500" style="width:100%;height:auto;display:block"></canvas>
+          <div class="img-scroll">
+            <canvas id="canvas-${key}" width="1100" height="500" style="width:100%;height:auto;display:block"></canvas>
+          </div>
           <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:8px;">
             オレンジ＝BTC、色付き＝${ix.label}を起点で指数化（=100）。
             <strong>オレンジ点線＝BTC半減期</strong>。スライダーで起点を変えると勝ち負けが変わります。
@@ -300,8 +317,7 @@
     const canvas = document.getElementById(canvasId);
     if (!canvas || !slider) return;
     const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-    const PAD = {l:70, r:80, t:30, b:40};
+    let W = canvas.width, H = canvas.height;
 
     // 共通の日付範囲を算出
     const commonStart = Math.max(btcW[0].d.getTime(), altW[0].d.getTime());
@@ -315,6 +331,14 @@
     slider.value = 0;
 
     function render() {
+      // 表示幅に合わせて実サイズ描画（モバイルで文字が潰れないように）
+      const cw = canvas.clientWidth;
+      if (cw > 0) {
+        const th = Math.round(cw * 0.46);
+        if (canvas.width !== cw || canvas.height !== th) { canvas.width = cw; canvas.height = th; }
+      }
+      W = canvas.width; H = canvas.height;
+      const PAD = W < 460 ? {l:46, r:54, t:22, b:32} : {l:70, r:80, t:30, b:40};
       const startIdx = parseInt(slider.value);
       const startDate = btcFiltered[startIdx].d;
       sliderLabel.textContent = startDate.toISOString().slice(0,7);
@@ -418,11 +442,19 @@
 
     slider.addEventListener('input', render);
     render();
+    return render;
   }
 
+  const _cmpRenders = [];
   Object.keys(alts).forEach(key => {
     const a = alts[key];
-    drawComparison('canvas-' + key, key, a.label, a.color);
+    const r = drawComparison('canvas-' + key, key, a.label, a.color);
+    if (r) _cmpRenders.push(r);
+  });
+  let _cmpTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(_cmpTimer);
+    _cmpTimer = setTimeout(() => _cmpRenders.forEach(fn => fn()), 150);
   });
 
   document.getElementById('caveat').innerHTML =

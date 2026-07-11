@@ -3,7 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>株価指数トレンド予測（NASDAQ100 / SOX）— アセットナビ</title>
+  <title>株価指数トレンド予測（S&P500 / NASDAQ100 / SOX / 日経225 / 全世界株）— アセットナビ</title>
+  <meta name="description" content="S&P500・NASDAQ100・SOX・日経225・全世界株を指数トレンド＋σチャンネルで当てはめ、割安/割高と将来リターンの参考値を出します。" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b8f6a'/%3E%3Cpath d='M6 22 L13 15 L18 19 L26 9' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="株価指数トレンド予測 — アセットナビ" />
+  <meta property="og:description" content="S&P500・NASDAQ100・SOX・日経225・全世界株のトレンドと割安/割高、将来リターンの参考値。" />
+  <meta property="og:url" content="https://makkinngami-cmd.github.io/asset-navi/index_trend.html" />
+  <meta property="og:image" content="https://makkinngami-cmd.github.io/asset-navi/index_spx_log.png" />
+  <meta name="twitter:card" content="summary_large_image" />
   <style>
     :root {
       --bg: #f6f7f9; --panel: #ffffff; --ink: #172026; --muted: #66737d;
@@ -38,6 +46,13 @@
     .panel-head { padding: 12px 16px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); background: #fafbfc; }
     .panel-body { padding: 16px; }
     img { display: block; width: 100%; height: auto; }
+    /* モバイル：グラフを無理に縮小せず文字が読める幅を確保し、横スクロールに逃がす */
+    @media (max-width: 760px) {
+      .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .img-scroll img { width: auto; min-width: 700px; height: auto; }
+      .img-scroll::after { content: '→ 横にスクロールできます'; display: block;
+        font-size: 11px; color: var(--muted); text-align: right; padding: 4px 12px 8px 0; }
+    }
 
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
     @media (max-width: 760px) { .metrics { grid-template-columns: 1fr 1fr; } }
@@ -134,7 +149,7 @@
       cycleSection = `
         <div class="panel">
           <div class="panel-head">③ 3〜4年サイクル（${cyStart}年以降）— BTC半減期サイクル風</div>
-          <img src="${ix.charts[2]}" alt="${ix.label} サイクル" />
+          <div class="img-scroll"><img src="${ix.charts[2]}" alt="${ix.label} サイクル" /></div>
           <div class="panel-body" style="border-top:1px solid var(--line)">
             <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
               <div class="metric">
@@ -204,11 +219,11 @@
       </div>
       <div class="panel">
         <div class="panel-head">① 指数トレンド＋σチャンネル（対数スケール）</div>
-        <img src="${ix.charts[0]}" alt="${ix.label} トレンド" />
+        <div class="img-scroll"><img src="${ix.charts[0]}" alt="${ix.label} トレンド" /></div>
       </div>
       <div class="panel">
         <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
-        <img src="${ix.charts[1]}" alt="${ix.label} 乖離" />
+        <div class="img-scroll"><img src="${ix.charts[1]}" alt="${ix.label} 乖離" /></div>
       </div>
       ${cycleSection}
       <div class="panel">
