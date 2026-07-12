@@ -45,12 +45,12 @@
     .panel-head { padding: 12px 16px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); background: #fafbfc; }
     .panel-body { padding: 16px; }
     img { display: block; width: 100%; height: auto; }
+    .scroll-hint { display: none; }
     /* モバイル：グラフを無理に縮小せず文字が読める幅を確保し、横スクロールに逃がす */
     @media (max-width: 760px) {
       .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .img-scroll img, .img-scroll canvas { width: auto !important; min-width: 700px; height: auto !important; }
-      .img-scroll::after { content: '→ 横にスクロールできます'; display: block;
-        font-size: 11px; color: var(--muted); text-align: right; padding: 4px 12px 8px 0; }
+      .scroll-hint { display: block; font-size: 11px; color: var(--muted); text-align: right; padding: 4px 12px; }
     }
 
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -114,14 +114,17 @@
   <!-- グラフ -->
   <div class="panel">
     <div class="panel-head">① 両対数（log-log）：底・天井ラインのフィット</div>
+    <div class="scroll-hint">→ 横にスクロールできます</div>
     <div class="img-scroll"><img src="btc_powerlaw_log.png" alt="両対数グラフ" /></div>
   </div>
   <div class="panel">
     <div class="panel-head">② 時間軸・対数スケール：半減期サイクルと将来予測</div>
+    <div class="scroll-hint">→ 横にスクロールできます</div>
     <div class="img-scroll"><img src="btc_powerlaw_time.png" alt="時間軸対数グラフ" /></div>
   </div>
   <div class="panel">
     <div class="panel-head">③ リニアスケール：現在価格基準の倍率</div>
+    <div class="scroll-hint">→ 横にスクロールできます</div>
     <div class="img-scroll"><img src="btc_powerlaw_linear.png" alt="リニアスケールグラフ" /></div>
   </div>
 
@@ -242,10 +245,12 @@
       </div>
       <div class="panel">
         <div class="panel-head">① 指数トレンド＋σチャンネル（対数スケール）</div>
+        <div class="scroll-hint">→ 横にスクロールできます</div>
         <div class="img-scroll"><img src="${ix.charts[0]}" alt="${ix.label} トレンド" /></div>
       </div>
       <div class="panel">
         <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
+        <div class="scroll-hint">→ 横にスクロールできます</div>
         <div class="img-scroll"><img src="${ix.charts[1]}" alt="${ix.label} 乖離" /></div>
       </div>
       <div class="panel">
@@ -256,6 +261,7 @@
             <input type="range" id="slider-${key}" style="flex:1;min-width:200px" />
             <span id="slider-label-${key}" style="font-size:13px;font-weight:700;min-width:80px"></span>
           </div>
+          <div class="scroll-hint">→ 横にスクロールできます</div>
           <div class="img-scroll">
             <canvas id="canvas-${key}" width="1100" height="500" style="width:100%;height:auto;display:block"></canvas>
           </div>

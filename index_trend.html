@@ -46,12 +46,12 @@
     .panel-head { padding: 12px 16px; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--line); background: #fafbfc; }
     .panel-body { padding: 16px; }
     img { display: block; width: 100%; height: auto; }
+    .scroll-hint { display: none; }
     /* モバイル：グラフを無理に縮小せず文字が読める幅を確保し、横スクロールに逃がす */
     @media (max-width: 760px) {
       .img-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .img-scroll img { width: auto; min-width: 700px; height: auto; }
-      .img-scroll::after { content: '→ 横にスクロールできます'; display: block;
-        font-size: 11px; color: var(--muted); text-align: right; padding: 4px 12px 8px 0; }
+      .scroll-hint { display: block; font-size: 11px; color: var(--muted); text-align: right; padding: 4px 12px; }
     }
 
     .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -149,6 +149,7 @@
       cycleSection = `
         <div class="panel">
           <div class="panel-head">③ 3〜4年サイクル（${cyStart}年以降）— BTC半減期サイクル風</div>
+          <div class="scroll-hint">→ 横にスクロールできます</div>
           <div class="img-scroll"><img src="${ix.charts[2]}" alt="${ix.label} サイクル" /></div>
           <div class="panel-body" style="border-top:1px solid var(--line)">
             <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
@@ -219,10 +220,12 @@
       </div>
       <div class="panel">
         <div class="panel-head">① 指数トレンド＋σチャンネル（対数スケール）</div>
+        <div class="scroll-hint">→ 横にスクロールできます</div>
         <div class="img-scroll"><img src="${ix.charts[0]}" alt="${ix.label} トレンド" /></div>
       </div>
       <div class="panel">
         <div class="panel-head">② トレンドからの割安・割高（平均回帰）</div>
+        <div class="scroll-hint">→ 横にスクロールできます</div>
         <div class="img-scroll"><img src="${ix.charts[1]}" alt="${ix.label} 乖離" /></div>
       </div>
       ${cycleSection}
