@@ -4,6 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>アセットナビ - 資産配分シミュレーター</title>
+  <meta name="description" content="効率的フロンティア・モンテカルロ・過去リプレイで、株/債券/金/REIT/BTCの配分を体感できる無料の資産配分シミュレーター。リターン・リスク・将来の範囲を試算します。" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232364aa'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='20' font-weight='700' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="アセットナビ - 資産配分シミュレーター" />
+  <meta property="og:description" content="効率的フロンティア・モンテカルロ・過去リプレイで資産配分を体感できる無料ツール。" />
+  <meta property="og:url" content="https://makkinngami-cmd.github.io/asset-navi/" />
+  <meta property="og:site_name" content="アセットナビ" />
+  <meta name="twitter:card" content="summary" />
   <style>
     :root {
       --bg: #f6f7f9;
@@ -210,6 +218,8 @@
       line-height: 1.6; padding: 12px;
       background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
     }
+    .site-meta { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; text-align: center; }
+    .site-meta a { color: inherit; }
     .corr-heatmap { overflow-x: auto; }
     .corr-heatmap table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
     .corr-heatmap th, .corr-heatmap td { padding: 8px 6px; text-align: center; border: 1px solid #fff; }
@@ -563,6 +573,7 @@
         試算値は対数正規分布の簡易近似（手数料・税金・為替・インフレ未考慮）です。
         BTCのリターン予測はパワーローモデルに基づく推計であり、実際の価格は大きく乖離することがあります。
       </p>
+      <p class="site-meta">運営：アセットナビ｜データは月次更新・各ページの注意事項をご確認ください</p>
     </main>
   </div>
 
