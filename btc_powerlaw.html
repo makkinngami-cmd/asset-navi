@@ -68,6 +68,7 @@
     .btc { color: var(--btc); }
     .red { color: var(--red); }
     .green { color: var(--green); }
+    .amber { color: var(--amber); }
 
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
@@ -179,7 +180,6 @@
   const dev = d.current.deviation_pct;
   const devEl = document.getElementById('m-dev');
   devEl.textContent = pctn(dev);
-  devEl.className = dev < 0 ? 'green' : 'red';
   const btcDevBadge = dev <= -0.25
     ? { label: 'トレンド比で低め', tone: 'low' }
     : dev < 0.25
@@ -187,6 +187,7 @@
       : dev < 0.75
         ? { label: '高め', tone: 'high' }
         : { label: 'かなり高め', tone: 'very-high' };
+  devEl.className = btcDevBadge.tone === 'low' ? 'green' : (btcDevBadge.tone === 'very-high' ? 'red' : 'amber');
   const btcBadgeEl = document.getElementById('m-dev-badge');
   btcBadgeEl.textContent = btcDevBadge.label;
   btcBadgeEl.className = 'trend-badge ' + btcDevBadge.tone;
@@ -221,7 +222,7 @@
     const ix = alts[key];
     const fit2 = ix.fit, exp2 = ix.expected, vol2 = ix.realized_volatility;
     const devSig = exp2.deviation_sigma;
-    const devClass = devSig > 1.5 ? 'red' : (devSig < -1.0 ? 'green' : 'btc');
+    const devClass = devSig <= -1 ? 'green' : (devSig >= 2 ? 'red' : 'amber');
     const devBadge = devSig <= -1
       ? { label: 'トレンド比で低め', tone: 'low' }
       : devSig < 1

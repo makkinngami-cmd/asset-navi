@@ -123,7 +123,7 @@
     const ix = d.indices[key];
     const fit = ix.fit, exp = ix.expected, vol = ix.realized_volatility;
     const devSig = exp.deviation_sigma;
-    const devClass = devSig > 1.5 ? 'red' : (devSig < -1.0 ? 'green' : 'amber');
+    const devClass = devSig <= -1 ? 'green' : (devSig >= 2 ? 'red' : 'amber');
     const devBadge = devSig <= -1
       ? { label: 'トレンド比で低め', tone: 'low' }
       : devSig < 1
