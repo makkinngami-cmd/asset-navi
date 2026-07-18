@@ -171,6 +171,13 @@
       color: #4d5a61; border-radius: 999px; padding: 6px 12px; font-size: 12px;
       font-weight: 700; cursor: pointer; white-space: nowrap; }
     .reset-btn:hover { background: #eef0f2; border-color: #b0b8bd; }
+    .panel-actions { display: flex; align-items: center; gap: 6px; }
+    .share-notice { margin: 0 0 12px; padding: 9px 12px; border: 1px solid #d5e3f2; border-radius: 8px;
+      background: #eef4fb; color: #2d5d88; font-size: 12px; line-height: 1.5; }
+    .share-feedback { position: fixed; right: 16px; bottom: 16px; z-index: 20; width: min(360px, calc(100vw - 32px));
+      padding: 10px 12px; border: 1px solid #b9ded1; border-radius: 8px; background: #eef8f4; color: #1b5e48;
+      font-size: 12px; font-weight: 650; box-shadow: 0 8px 24px rgba(23,32,38,.12); }
+    .share-feedback input { width: 100%; margin-top: 8px; box-sizing: border-box; font-size: 12px; }
     .compare-link { margin-top: 6px; align-self: flex-start; border: none; background: none;
       color: var(--blue, #2364aa); font-size: 12px; font-weight: 700; cursor: pointer; padding: 2px 0; }
     .preset-compare { margin-top: 8px; overflow-x: auto; }
@@ -316,6 +323,7 @@
         <li><b>3</b> 左のフロンティア図と下の<strong>将来シミュ</strong>で結果を見る</li>
       </ol>
 
+      <div id="sharedNotice" class="share-notice" hidden>共有された設定を表示中（自由に変更できます）</div>
       <div class="tabs">
         <button class="tab active" type="button" data-tabbtn="design">設計する</button>
         <button class="tab" type="button" data-tabbtn="verify">過去で検証</button>
@@ -346,7 +354,10 @@
         <div class="panel">
           <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
             <h2>設計パラメータ</h2>
-            <button id="resetBtn" type="button" class="reset-btn">↺ 初期設定に戻す</button>
+            <div class="panel-actions">
+              <button id="shareBtn" type="button" class="reset-btn">共有</button>
+              <button id="resetBtn" type="button" class="reset-btn">↺ 初期設定に戻す</button>
+            </div>
           </div>
           <div class="panel-body">
             <div class="controls">
@@ -576,6 +587,7 @@
       <p class="site-meta">運営：アセットナビ｜データは月次更新・各ページの注意事項をご確認ください</p>
     </main>
   </div>
+  <div id="shareFeedback" class="share-feedback" role="status" aria-live="polite" hidden></div>
 
   <script src="btc_powerlaw_data.js"></script>
   <script src="backtest_data.js"></script>
@@ -695,6 +707,10 @@
       enabled: { global_equity: true, sp500: true, us_bond: true, gold: true, reit: true, em: true, commodity: true, japan: true, nasdaq100: true, sox: true }
     };
     const DEFAULT_STATE = JSON.parse(JSON.stringify(state));  // リセット用の初期値スナップショット
+    const ASSET_CODES = { ge: 'global_equity', sp: 'sp500', nx: 'nasdaq100', sx: 'sox', jp: 'japan', em: 'em', ub: 'us_bond', re: 'reit', go: 'gold', co: 'commodity' };
+    const ASSET_CODES_REVERSE = Object.fromEntries(Object.entries(ASSET_CODES).map(([code, key]) => [key, code]));
+    let persistenceEnabled = true;
+    let sharedViewActive = false;
 
     // ── Core computation ───────────────────────────────────────────────────
     function getBtcReturn(horizon) {
@@ -923,6 +939,7 @@
     // ── 設定の保存・復元（資産形成シミュレーターと同じlocalStorage方式） ──────
     const STORAGE_KEY = 'asset-navi-v1';
     function saveState() {
+      if (!persistenceEnabled) return;
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
     }
     function loadState() {
@@ -945,8 +962,106 @@
             if (typeof s.enabled[k] === 'boolean') state.enabled[k] = s.enabled[k];
           });
         }
-        syncControlsToState();
       } catch (e) {}
+    }
+
+    function isWholeNumberInRange(value, min, max) {
+      return Number.isInteger(value) && value >= min && value <= max;
+    }
+
+    function snapBacktestDate(date) {
+      if (!BT || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+      const maxIdx = Math.max(0, BT.dates.length - 53);
+      const index = BT.dates.findIndex((candidate, i) => i <= maxIdx && candidate >= date);
+      return index >= 0 ? index : maxIdx;
+    }
+
+    function applySharedUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('v') !== '1') return false;
+
+      Object.assign(state, JSON.parse(JSON.stringify(DEFAULT_STATE)));
+      const preset = params.get('p');
+      if (preset && PRESETS[preset]) state.preset = preset;
+
+      const btcPct = Number(params.get('b'));
+      if (params.has('b') && isWholeNumberInRange(btcPct, 0, 100)) state.btcPct = btcPct;
+      const cashPct = Number(params.get('c'));
+      if (params.has('c') && isWholeNumberInRange(cashPct, 0, 100)) state.cashPct = cashPct;
+      const horizon = Number(params.get('h'));
+      if (params.has('h') && isWholeNumberInRange(horizon, 1, 15)) state.horizon = horizon;
+
+      const tab = params.get('t');
+      if (['design', 'verify', 'learn'].includes(tab)) state.tab = tab;
+      const currency = params.get('x');
+      if (currency === 'jpy' || currency === 'usd') state.btCurrency = currency;
+
+      if (params.has('e')) {
+        const enabledKeys = new Set((params.get('e') || '').split(',').map(code => ASSET_CODES[code]).filter(Boolean));
+        if (enabledKeys.size > 0) {
+          Object.keys(state.enabled).forEach(key => { state.enabled[key] = enabledKeys.has(key); });
+        }
+      }
+
+      const snappedStart = snapBacktestDate(params.get('d') || '');
+      if (snappedStart !== null) state.btStart = snappedStart;
+
+      // 金額は共有せず、受け取った側は常に既定値から始める。
+      state.initialAmount = DEFAULT_STATE.initialAmount;
+      state.targetAmount = DEFAULT_STATE.targetAmount;
+      persistenceEnabled = false;
+      sharedViewActive = true;
+      return true;
+    }
+
+    function beginLocalEdits() {
+      if (!sharedViewActive) return;
+      sharedViewActive = false;
+      persistenceEnabled = true;
+      document.getElementById('sharedNotice').hidden = true;
+    }
+
+    function buildShareUrl() {
+      const params = new URLSearchParams({ v: '1' });
+      if (state.preset !== DEFAULT_STATE.preset) params.set('p', state.preset);
+      if (state.btcPct !== DEFAULT_STATE.btcPct) params.set('b', String(state.btcPct));
+      if (state.cashPct !== DEFAULT_STATE.cashPct) params.set('c', String(state.cashPct));
+      if (state.horizon !== DEFAULT_STATE.horizon) params.set('h', String(state.horizon));
+      const enabledCodes = Object.keys(state.enabled).filter(key => state.enabled[key]).map(key => ASSET_CODES_REVERSE[key]);
+      const defaultEnabledCodes = Object.keys(DEFAULT_STATE.enabled).filter(key => DEFAULT_STATE.enabled[key]).map(key => ASSET_CODES_REVERSE[key]);
+      if (enabledCodes.join(',') !== defaultEnabledCodes.join(',')) params.set('e', enabledCodes.join(','));
+      if (state.tab !== DEFAULT_STATE.tab) params.set('t', state.tab);
+      if (state.btCurrency !== DEFAULT_STATE.btCurrency) params.set('x', state.btCurrency);
+      if (BT && state.btStart !== DEFAULT_STATE.btStart && BT.dates[state.btStart]) params.set('d', BT.dates[state.btStart]);
+      return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    }
+
+    let shareFeedbackTimer;
+    function showShareFeedback(message, url) {
+      const box = document.getElementById('shareFeedback');
+      box.hidden = false;
+      box.textContent = message;
+      if (url) {
+        const input = document.createElement('input');
+        input.value = url;
+        input.readOnly = true;
+        input.setAttribute('aria-label', '共有リンク');
+        box.appendChild(input);
+        input.select();
+      }
+      clearTimeout(shareFeedbackTimer);
+      if (!url) shareFeedbackTimer = setTimeout(() => { box.hidden = true; }, 2200);
+    }
+
+    async function shareCurrentState() {
+      const url = buildShareUrl();
+      try {
+        if (!navigator.clipboard?.writeText) throw new Error('clipboard unavailable');
+        await navigator.clipboard.writeText(url);
+        showShareFeedback('共有リンクをコピーしました');
+      } catch (e) {
+        showShareFeedback('リンクをコピーしてください', url);
+      }
     }
 
     // stateの現在値を画面の入力欄に反映する（loadState/リセット共通）
@@ -1760,11 +1875,12 @@
       _rzTimer = setTimeout(render, 150);
     });
     document.querySelectorAll('.tab').forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tabbtn));
+      btn.addEventListener('click', () => { beginLocalEdits(); switchTab(btn.dataset.tabbtn); });
     });
 
     // ── 初期設定に戻す ───────────────────────────────────────────────────────
     document.getElementById('resetBtn').addEventListener('click', () => {
+      beginLocalEdits();
       Object.assign(state, JSON.parse(JSON.stringify(DEFAULT_STATE)));
       syncControlsToState();
       switchTab(state.tab);   // render()も内部で呼ばれる
@@ -1811,6 +1927,7 @@
 
     document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
+        beginLocalEdits();
         document.querySelectorAll('.preset-btn[data-preset]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.preset = btn.dataset.preset;
@@ -1822,6 +1939,7 @@
     // バックテスト：通貨トグル
     document.querySelectorAll('.bt-cur').forEach(btn => {
       btn.addEventListener('click', () => {
+        beginLocalEdits();
         document.querySelectorAll('.bt-cur').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.btCurrency = btn.dataset.cur;
@@ -1832,43 +1950,51 @@
 
     // バックテスト：開始時期スライダー
     document.getElementById('btStart').addEventListener('input', e => {
+      beginLocalEdits();
       state.btStart = Number(e.target.value);
       render();
     });
 
     // MVOの罠：BTC期待リターンの仮定スライダー
     document.getElementById('mvoSlider').addEventListener('input', e => {
+      beginLocalEdits();
       state.mvoBtcRet = Number(e.target.value);
       drawMvoChart();
       saveState();
     });
 
     document.getElementById('btcSlider').addEventListener('input', e => {
+      beginLocalEdits();
       state.btcPct = Number(e.target.value);
       render();
     });
 
     document.getElementById('cashSlider').addEventListener('input', e => {
+      beginLocalEdits();
       state.cashPct = Number(e.target.value);
       render();
     });
 
     document.getElementById('horizonSlider').addEventListener('input', e => {
+      beginLocalEdits();
       state.horizon = Number(e.target.value);
       render();
     });
 
     document.getElementById('initialAmount').addEventListener('input', e => {
+      beginLocalEdits();
       const v = Number(e.target.value);
       if (v > 0) { state.initialAmount = v; render(); }
     });
 
     document.getElementById('targetAmount').addEventListener('input', e => {
+      beginLocalEdits();
       const v = Number(e.target.value);
       if (v > 0) { state.targetAmount = v; render(); }
     });
 
     document.getElementById('assetUniverse').addEventListener('change', e => {
+      beginLocalEdits();
       const key = e.target?.dataset?.asset;
       if (!key) return;
       // Prevent unchecking the last enabled asset
@@ -1927,8 +2053,14 @@
     renderCorrHeatmap();
     renderQuilt();
     initBacktestSlider();
+    if (applySharedUrl()) {
+      initBacktestSlider();
+      document.getElementById('sharedNotice').hidden = false;
+    }
+    syncControlsToState();
     render();
     switchTab(state.tab);   // 初期タブを反映（チャートはrenderで描画済み）
+    document.getElementById('shareBtn').addEventListener('click', shareCurrentState);
   </script>
 </body>
 </html>
