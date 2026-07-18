@@ -61,6 +61,11 @@
     .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
     .metric-value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
     .metric-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .trend-badge { display: inline-block; margin-left: 5px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 700; font-style: normal; vertical-align: middle; }
+    .trend-badge.low { background: #e3f3ee; color: #0b8f6a; }
+    .trend-badge.near, .trend-badge.high { background: #fbeede; color: #9a5e10; }
+    .trend-badge.very-high { background: #f7e2e2; color: #bd3b3b; }
+    .trend-note { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.4; }
     .red { color: var(--red); }
     .green { color: var(--green); }
     .amber { color: var(--amber); }
@@ -119,7 +124,13 @@
     const fit = ix.fit, exp = ix.expected, vol = ix.realized_volatility;
     const devSig = exp.deviation_sigma;
     const devClass = devSig > 1.5 ? 'red' : (devSig < -1.0 ? 'green' : 'amber');
-    const devWord = devSig > 1.5 ? '割高' : (devSig < -1.0 ? '割安' : '中立');
+    const devBadge = devSig <= -1
+      ? { label: 'トレンド比で低め', tone: 'low' }
+      : devSig < 1
+        ? { label: 'トレンド近辺', tone: 'near' }
+        : devSig < 2
+          ? { label: '高め', tone: 'high' }
+          : { label: 'かなり高め', tone: 'very-high' };
 
     // 将来テーブル（主要ホライズン）— 2シナリオ並記
     //   回帰シナリオ … 旧トレンドへ平均回帰（モデル本体・弱気アンカー）
@@ -205,8 +216,9 @@
             </div>
             <div class="metric">
               <div class="metric-label">現在のトレンド乖離</div>
-              <div class="metric-value ${devClass}">${devSig >= 0 ? '+' : ''}${devSig.toFixed(1)}σ（${devWord}）</div>
+              <div class="metric-value ${devClass}">${devSig >= 0 ? '+' : ''}${devSig.toFixed(1)}σ <em class="trend-badge ${devBadge.tone}">${devBadge.label}</em></div>
               <div class="metric-sub">現在 ${num(exp.current_price)} / 線 ${num(exp.trend_price_now)}</div>
+              <div class="trend-note">過去への当てはめに基づく参考</div>
             </div>
             <div class="metric">
               <div class="metric-label">10年期待リターン（年率）</div>
