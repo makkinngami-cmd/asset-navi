@@ -335,6 +335,7 @@
         <div class="panel">
           <div class="panel-head">
             <h2>効率的フロンティア（参考）<span class="info" tabindex="0" data-tip="各リスク水準で最大リターンになる資産の組み合わせをつないだ曲線。投資の「一番おいしい縁」。オレンジ点線＝資本市場線(CML)、★＝最大シャープの接点ポートフォリオ。">?</span></h2>
+            <button id="exportFrontierBtn" type="button" class="reset-btn">↓ PNG保存</button>
           </div>
           <div class="panel-body">
             <div class="chart-wrap">
@@ -1064,6 +1065,152 @@
       }
     }
 
+    // ── 共有用PNGカード ────────────────────────────────────────────────────
+    const EXPORT_SCALE = 2;
+    const EXPORT_WIDTH = 1200;
+
+    function exportDateString() {
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(new Date());
+      const value = type => parts.find(p => p.type === type).value;
+      return `${value('year')}-${value('month')}-${value('day')}`;
+    }
+
+    function activeAssetLabels() {
+      return ASSET_INFO
+        .filter(a => a.key !== 'btc' && state.enabled[a.key])
+        .map(a => a.label)
+        .join('・');
+    }
+
+    function drawCardText(c, text, x, y, maxWidth, lineHeight, maxLines = 2) {
+      const chars = [...text];
+      const lines = [];
+      let line = '';
+      chars.forEach(ch => {
+        const next = line + ch;
+        if (c.measureText(next).width > maxWidth && line) {
+          if (lines.length < maxLines - 1) lines.push(line);
+          line = ch;
+        } else {
+          line = next;
+        }
+      });
+      if (line && lines.length < maxLines) lines.push(line);
+      if (lines.length === maxLines && chars.join('') !== lines.join('')) {
+        let last = lines[lines.length - 1];
+        while (c.measureText(last + '…').width > maxWidth && last) last = last.slice(0, -1);
+        lines[lines.length - 1] = last + '…';
+      }
+      lines.forEach((value, index) => c.fillText(value, x, y + index * lineHeight));
+      return lines.length;
+    }
+
+    function createFrontierShareCard() {
+      const result = computePortfolio();
+      const cardHeight = 860;
+      const padding = 44;
+      const card = document.createElement('canvas');
+      card.width = EXPORT_WIDTH * EXPORT_SCALE;
+      card.height = cardHeight * EXPORT_SCALE;
+      const c = card.getContext('2d');
+      c.scale(EXPORT_SCALE, EXPORT_SCALE);
+
+      c.fillStyle = '#f6f7f9';
+      c.fillRect(0, 0, EXPORT_WIDTH, cardHeight);
+      c.fillStyle = '#ffffff';
+      c.fillRect(0, 0, EXPORT_WIDTH, 158);
+      c.fillStyle = '#2364aa';
+      c.fillRect(0, 0, 10, 158);
+
+      c.fillStyle = '#2364aa';
+      c.font = '700 22px "Segoe UI", "Noto Sans JP", sans-serif';
+      c.fillText('アセットナビ', padding, 42);
+      c.fillStyle = '#172026';
+      c.font = '700 30px "Segoe UI", "Noto Sans JP", sans-serif';
+      c.fillText('効率的フロンティア（参考）', padding, 84);
+      c.fillStyle = '#4d5a61';
+      c.font = '600 18px "Segoe UI", "Noto Sans JP", sans-serif';
+      const settingLine = `設定：${PRESETS[state.preset].label} ｜ BTC ${state.btcPct}% ｜ 現金 ${state.cashPct}% ｜ 期間 ${state.horizon}年 ｜ ${activeAssetLabels()}`;
+      drawCardText(c, settingLine, padding, 120, EXPORT_WIDTH - padding * 2, 24);
+
+      const chart = document.createElement('canvas');
+      const chartWidth = EXPORT_WIDTH - padding * 2;
+      const chartHeight = 544;
+      drawFrontierToCanvas(result, chart, chartWidth, chartHeight, EXPORT_SCALE);
+      c.fillStyle = '#ffffff';
+      c.fillRect(padding, 176, chartWidth, chartHeight);
+      c.drawImage(chart, padding, 176, chartWidth, chartHeight);
+      c.strokeStyle = '#d8e0e4';
+      c.lineWidth = 1;
+      c.strokeRect(padding + .5, 176 + .5, chartWidth - 1, chartHeight - 1);
+
+      const footerY = 760;
+      c.fillStyle = '#66737d';
+      c.font = '600 16px "Segoe UI", "Noto Sans JP", sans-serif';
+      c.fillText('アセットナビ ｜ makkinngami-cmd.github.io/asset-navi', padding, footerY);
+      c.textAlign = 'right';
+      c.fillText(`${exportDateString()} 作成`, EXPORT_WIDTH - padding, footerY);
+      c.textAlign = 'left';
+      c.fillStyle = '#66737d';
+      c.font = '14px "Segoe UI", "Noto Sans JP", sans-serif';
+      c.fillText('シミュレーションであり投資助言ではありません。将来の結果を保証するものではありません。', padding, footerY + 31);
+      return card;
+    }
+
+    function canvasToPngBlob(target) {
+      return new Promise(resolve => target.toBlob(resolve, 'image/png'));
+    }
+
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function downloadPngBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function exportFrontierCard() {
+      const card = createFrontierShareCard();
+      let blob = await canvasToPngBlob(card);
+      if (!blob) {
+        const response = await fetch(card.toDataURL('image/png'));
+        blob = await response.blob();
+      }
+      const filename = `asset-navi_frontier_${exportDateString()}.png`;
+      const file = typeof File === 'function' ? new File([blob], filename, { type: 'image/png' }) : null;
+
+      if (isIOS() && file && navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+        try {
+          await navigator.share({ files: [file], title: 'アセットナビ｜効率的フロンティア' });
+          showShareFeedback('PNGを共有しました');
+          return;
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+        }
+      }
+
+      try {
+        downloadPngBlob(blob, filename);
+        showShareFeedback('PNGを保存しました');
+      } catch (e) {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        showShareFeedback('保存用画像を開きました。長押しで保存してください');
+      }
+    }
+
     // stateの現在値を画面の入力欄に反映する（loadState/リセット共通）
     function syncControlsToState() {
       document.querySelectorAll('.preset-btn[data-preset]').forEach(b =>
@@ -1114,8 +1261,8 @@
     }
 
     // ── Canvas chart ───────────────────────────────────────────────────────
-    const canvas = document.getElementById('frontier');
-    const ctx    = canvas.getContext('2d');
+    let canvas = document.getElementById('frontier');
+    let ctx    = canvas.getContext('2d');
     const AREA   = { left: 82, right: 48, top: 30, bottom: 64 };
 
     // 表示幅に合わせてcanvasの実サイズを設定（縮小せず実寸で描画＝モバイルでも文字が読める）
@@ -1254,6 +1401,30 @@
 
     function drawChart(result) {
       if (!fitCanvas(canvas)) return;
+      drawFrontierContent(result);
+    }
+
+    // 画面用と共有カード用で同じ描画処理を使う。共有カード側は表示中のタブや
+    // 画面幅に依存しないため、非表示タブやモバイルでも一定の品質を保てる。
+    function drawFrontierToCanvas(result, target, logicalWidth, logicalHeight, pixelRatio = 1) {
+      const previousCanvas = canvas;
+      const previousCtx = ctx;
+      target.width = logicalWidth * pixelRatio;
+      target.height = logicalHeight * pixelRatio;
+      canvas = { width: logicalWidth, height: logicalHeight };
+      ctx = target.getContext('2d');
+      ctx.save();
+      ctx.scale(pixelRatio, pixelRatio);
+      try {
+        drawFrontierContent(result);
+      } finally {
+        ctx.restore();
+        canvas = previousCanvas;
+        ctx = previousCtx;
+      }
+    }
+
+    function drawFrontierContent(result) {
       const btcRet100 = result.btcReturn * 100;
       const axis = getAxis(btcRet100);
       const sx = makeSx(axis);
@@ -2061,6 +2232,7 @@
     render();
     switchTab(state.tab);   // 初期タブを反映（チャートはrenderで描画済み）
     document.getElementById('shareBtn').addEventListener('click', shareCurrentState);
+    document.getElementById('exportFrontierBtn').addEventListener('click', exportFrontierCard);
   </script>
 </body>
 </html>
