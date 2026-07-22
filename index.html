@@ -1280,11 +1280,11 @@
       return { riskMax: maxRisk, returnMax: maxRet };
     }
 
-    function makeSx(axis) {
-      return r => AREA.left + (r / axis.riskMax) * (canvas.width - AREA.left - AREA.right);
+    function makeSx(axis, area = AREA) {
+      return r => area.left + (r / axis.riskMax) * (canvas.width - area.left - area.right);
     }
-    function makeSy(axis) {
-      return r => canvas.height - AREA.bottom - (r / axis.returnMax) * (canvas.height - AREA.top - AREA.bottom);
+    function makeSy(axis, area = AREA) {
+      return r => canvas.height - area.bottom - (r / axis.returnMax) * (canvas.height - area.top - area.bottom);
     }
 
     // Portfolio stats for arbitrary weights (used for frontier generation)
@@ -1427,8 +1427,10 @@
     function drawFrontierContent(result) {
       const btcRet100 = result.btcReturn * 100;
       const axis = getAxis(btcRet100);
-      const sx = makeSx(axis);
-      const sy = makeSy(axis);
+      const compact = canvas.width < 520;
+      const A = compact ? { left: 48, right: 16, top: 28, bottom: 48 } : AREA;
+      const sx = makeSx(axis, A);
+      const sy = makeSy(axis, A);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#ffffff';
@@ -1437,34 +1439,35 @@
       // Grid
       ctx.strokeStyle = '#d8e0e4';
       ctx.lineWidth = 1;
-      ctx.font = '13px Segoe UI, sans-serif';
+      ctx.font = `${compact ? 10 : 13}px Segoe UI, sans-serif`;
       ctx.fillStyle = '#66737d';
 
-      for (let i = 0; i <= 5; i++) {
-        const xv = (axis.riskMax / 5) * i;
+      const gridSteps = compact ? 3 : 5;
+      for (let i = 0; i <= gridSteps; i++) {
+        const xv = (axis.riskMax / gridSteps) * i;
         const px = sx(xv);
-        ctx.beginPath(); ctx.moveTo(px, AREA.top); ctx.lineTo(px, canvas.height - AREA.bottom); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(px, A.top); ctx.lineTo(px, canvas.height - A.bottom); ctx.stroke();
         ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        ctx.fillText(Math.round(xv) + '%', px, canvas.height - AREA.bottom + 12);
+        ctx.fillText(Math.round(xv) + '%', px, canvas.height - A.bottom + (compact ? 8 : 12));
       }
-      for (let i = 0; i <= 5; i++) {
-        const yv = (axis.returnMax / 5) * i;
+      for (let i = 0; i <= gridSteps; i++) {
+        const yv = (axis.returnMax / gridSteps) * i;
         const py = sy(yv);
-        ctx.beginPath(); ctx.moveTo(AREA.left, py); ctx.lineTo(canvas.width - AREA.right, py); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(A.left, py); ctx.lineTo(canvas.width - A.right, py); ctx.stroke();
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-        ctx.fillText(yv.toFixed(0) + '%', AREA.left - 10, py);
+        ctx.fillText(yv.toFixed(0) + '%', A.left - (compact ? 6 : 10), py);
       }
 
       // Axis labels
       ctx.fillStyle = '#35444b';
-      ctx.font = '700 12px Segoe UI, sans-serif';
+      ctx.font = `700 ${compact ? 10 : 12}px Segoe UI, sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-      ctx.fillText('リスク（標準偏差）', AREA.left + (canvas.width - AREA.left - AREA.right) / 2, canvas.height - 6);
+      ctx.fillText(compact ? 'リスク' : 'リスク（標準偏差）', A.left + (canvas.width - A.left - A.right) / 2, canvas.height - 5);
       ctx.save();
-      ctx.translate(16, AREA.top + (canvas.height - AREA.top - AREA.bottom) / 2);
+      ctx.translate(compact ? 12 : 16, A.top + (canvas.height - A.top - A.bottom) / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.fillText('期待リターン', 0, 0);
+      ctx.fillText(compact ? '期待値' : '期待リターン', 0, 0);
       ctx.restore();
 
       // Frontier curve (smooth spline through real portfolio points)
@@ -1510,9 +1513,9 @@
         ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#9a5e10';
         ctx.font = '700 11px Segoe UI, sans-serif';
-        const tlbl = `最大シャープ ${tangency.ret.toFixed(1)}%/${tangency.risk.toFixed(1)}%`;
+        const tlbl = compact ? '最大シャープ' : `最大シャープ ${tangency.ret.toFixed(1)}%/${tangency.risk.toFixed(1)}%`;
         const tlblW = ctx.measureText(tlbl).width;
-        const tlblX = tx + 12 + tlblW > canvas.width - AREA.right ? tx - 12 - tlblW : tx + 12;
+        const tlblX = tx + 12 + tlblW > canvas.width - A.right ? tx - 12 - tlblW : tx + 12;
         ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         ctx.fillText(tlbl, tlblX, ty + 6);
       }
@@ -1533,8 +1536,8 @@
         ctx.fill(); ctx.stroke();
         // Label (clamp to chart area)
         ctx.fillStyle = a.key === 'btc' ? a.color : '#4d5a61';
-        ctx.font      = a.key === 'btc' ? '700 12px Segoe UI, sans-serif' : '12px Segoe UI, sans-serif';
-        const lx = Math.min(px + 10, canvas.width - AREA.right - 50);
+        ctx.font      = a.key === 'btc' ? `700 ${compact ? 10 : 12}px Segoe UI, sans-serif` : `${compact ? 10 : 12}px Segoe UI, sans-serif`;
+        const lx = Math.max(A.left + 3, Math.min(px + 8, canvas.width - A.right - (compact ? 30 : 50)));
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         ctx.fillText(a.label, lx, py);
       });
@@ -1547,8 +1550,8 @@
       ctx.lineWidth   = 1;
       ctx.setLineDash([4, 5]);
       ctx.beginPath();
-      ctx.moveTo(px, AREA.top); ctx.lineTo(px, canvas.height - AREA.bottom);
-      ctx.moveTo(AREA.left, py); ctx.lineTo(canvas.width - AREA.right, py);
+      ctx.moveTo(px, A.top); ctx.lineTo(px, canvas.height - A.bottom);
+      ctx.moveTo(A.left, py); ctx.lineTo(canvas.width - A.right, py);
       ctx.stroke();
       ctx.setLineDash([]);
 
@@ -1561,11 +1564,11 @@
       ctx.fill(); ctx.stroke();
 
       // Label (place left if near right edge)
-      const lbl = `${PRESETS[state.preset].label}${state.btcPct > 0 ? '+BTC' : ''}  ${portRet.toFixed(1)}% / ${portRisk.toFixed(1)}%`;
+      const lbl = compact ? '選択' : `${PRESETS[state.preset].label}${state.btcPct > 0 ? '+BTC' : ''}  ${portRet.toFixed(1)}% / ${portRisk.toFixed(1)}%`;
       ctx.fillStyle = '#0b8f6a';
-      ctx.font      = '700 12px Segoe UI, sans-serif';
+      ctx.font      = `700 ${compact ? 10 : 12}px Segoe UI, sans-serif`;
       const lblW = ctx.measureText(lbl).width;
-      const lblX = px + 12 + lblW > canvas.width - AREA.right ? px - 12 - lblW : px + 12;
+      const lblX = Math.max(A.left + 3, px + 12 + lblW > canvas.width - A.right ? px - 12 - lblW : px + 12);
       ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
       ctx.fillText(lbl, lblX, py - 4);
     }
@@ -1631,7 +1634,8 @@
     function drawMcChart(mc) {
       if (!fitCanvas(mcCanvas)) return;
       const W = mcCanvas.width, H = mcCanvas.height;
-      const A = { left: 76, right: 110, top: 24, bottom: 40 };
+      const compact = W < 520;
+      const A = compact ? { left: 54, right: 14, top: 20, bottom: 36 } : { left: 76, right: 110, top: 24, bottom: 40 };
       mctx.clearRect(0, 0, W, H);
       mctx.fillStyle = '#ffffff'; mctx.fillRect(0, 0, W, H);
 
@@ -1642,9 +1646,10 @@
       const sy = v => H - A.bottom - ((v - yMin) / (yMax - yMin)) * (H - A.top - A.bottom);
 
       // グリッド（横線5本）＋Y軸ラベル（万円）
-      mctx.font = '12px Segoe UI, sans-serif';
-      for (let i = 0; i <= 5; i++) {
-        const yv = (yMax / 5) * i;
+      mctx.font = `${compact ? 10 : 12}px Segoe UI, sans-serif`;
+      const gridSteps = compact ? 4 : 5;
+      for (let i = 0; i <= gridSteps; i++) {
+        const yv = (yMax / gridSteps) * i;
         const py = sy(yv);
         mctx.strokeStyle = '#eef0f2'; mctx.lineWidth = 1;
         mctx.beginPath(); mctx.moveTo(A.left, py); mctx.lineTo(W - A.right, py); mctx.stroke();
@@ -1653,7 +1658,7 @@
       }
       // X軸ラベル（年）
       mctx.fillStyle = '#66737d'; mctx.textAlign = 'center'; mctx.textBaseline = 'top';
-      const xStep = T <= 10 ? 2 : 3;
+      const xStep = compact ? Math.max(1, Math.ceil(T / 4)) : (T <= 10 ? 2 : 3);
       for (let t = 0; t <= T; t += xStep) {
         mctx.fillText(t === 0 ? '今' : t + '年', sx(t), H - A.bottom + 8);
       }
@@ -1689,22 +1694,39 @@
       mctx.beginPath(); mctx.moveTo(A.left, sy(mc.target)); mctx.lineTo(W - A.right, sy(mc.target)); mctx.stroke();
       mctx.setLineDash([]);
 
-      // 右端ラベル
-      mctx.textAlign = 'left'; mctx.textBaseline = 'middle';
-      mctx.font = '11px Segoe UI, sans-serif';
-      mctx.fillStyle = '#0b8f6a';
-      mctx.fillText('上位10% ' + fmt万円表示(mc.p90[T]), W - A.right + 6, sy(mc.p90[T]));
-      mctx.fillText('下位10% ' + fmt万円表示(mc.p10[T]), W - A.right + 6, sy(mc.p10[T]));
-      mctx.font = '700 12px Segoe UI, sans-serif';
-      mctx.fillText('中央値 ' + fmt万円表示(mc.p50[T]), W - A.right + 6, sy(mc.p50[T]));
-      mctx.fillStyle = '#9a5e10'; mctx.font = '11px Segoe UI, sans-serif';
-      mctx.fillText('目標 ' + fmt万円表示(mc.target), W - A.right + 6, sy(mc.target));
+      // 右端ラベルはモバイルでは縦に重なるため省略（上の到達確率と凡例で補足）。
+      if (!compact) {
+        mctx.textAlign = 'left'; mctx.textBaseline = 'middle';
+        mctx.font = '11px Segoe UI, sans-serif';
+        mctx.fillStyle = '#0b8f6a';
+        mctx.fillText('上位10% ' + fmt万円表示(mc.p90[T]), W - A.right + 6, sy(mc.p90[T]));
+        mctx.fillText('下位10% ' + fmt万円表示(mc.p10[T]), W - A.right + 6, sy(mc.p10[T]));
+        mctx.font = '700 12px Segoe UI, sans-serif';
+        mctx.fillText('中央値 ' + fmt万円表示(mc.p50[T]), W - A.right + 6, sy(mc.p50[T]));
+        mctx.fillStyle = '#9a5e10'; mctx.font = '11px Segoe UI, sans-serif';
+        mctx.fillText('目標 ' + fmt万円表示(mc.target), W - A.right + 6, sy(mc.target));
+      }
     }
 
     // Y軸用の簡易フォーマット（万円→億円）
     function fmt万円表示(man) {
       if (man >= 10000) return (man / 10000).toFixed(man >= 100000 ? 0 : 1) + '億';
       return Math.round(man).toLocaleString() + '万';
+    }
+
+    // モバイルでは開始直後の年ラベルを出さず、文字同士の重なりを防ぐ。
+    function chartYearTicks(dates, compact) {
+      const years = [];
+      dates.forEach((date, index) => {
+        const year = date.slice(0, 4);
+        if (!years.some(([knownYear]) => knownYear === year)) years.push([year, index]);
+      });
+      const last = years.length - 1;
+      return years.filter(([year], index) => {
+        if (index === 0 || index === last) return true;
+        if (compact) return index > 1 && Number(year) % 4 === 0;
+        return Number(year) % 2 === 0;
+      });
     }
 
     // ── 過去リプレイ（バックテスト） ─────────────────────────────────────────
@@ -1750,7 +1772,8 @@
     function drawBtChart(bt) {
       if (!fitCanvas(btCanvas)) return;
       const W = btCanvas.width, H = btCanvas.height;
-      const A = { left: 76, right: 96, top: 24, bottom: 40 };
+      const compact = W < 520;
+      const A = compact ? { left: 54, right: 14, top: 20, bottom: 36 } : { left: 76, right: 96, top: 24, bottom: 40 };
       btx.clearRect(0, 0, W, H);
       btx.fillStyle = '#ffffff'; btx.fillRect(0, 0, W, H);
       if (!bt || bt.values.length < 2) return;
@@ -1763,7 +1786,7 @@
       const sy = v => H - A.bottom - ((Math.log10(Math.max(1, v)) - logMin) / (logMax - logMin)) * (H - A.top - A.bottom);
 
       // 対数グリッド（10^e）＋Y軸ラベル
-      btx.font = '12px Segoe UI, sans-serif';
+      btx.font = `${compact ? 10 : 12}px Segoe UI, sans-serif`;
       for (let e = Math.floor(logMin); e <= Math.ceil(logMax); e++) {
         const gv = Math.pow(10, e);
         if (gv < vMin || gv > vMax) continue;
@@ -1775,12 +1798,9 @@
       }
       // X軸（年ラベル）
       btx.fillStyle = '#66737d'; btx.textAlign = 'center'; btx.textBaseline = 'top';
-      const yearsSet = {};
-      bt.dates.forEach((d, i) => {
-        const yr = d.slice(0, 4);
-        if (!(yr in yearsSet) && Number(yr) % 2 === 0) { yearsSet[yr] = i; }
+      chartYearTicks(bt.dates, compact).forEach(([year, index]) => {
+        btx.fillText(year, sx(index), H - A.bottom + 8);
       });
-      Object.keys(yearsSet).forEach(yr => { btx.fillText(yr, sx(yearsSet[yr]), H - A.bottom + 8); });
 
       // 初期投資ライン
       const initLine = state.initialAmount;
@@ -1788,8 +1808,10 @@
         btx.strokeStyle = '#b0b8bd'; btx.lineWidth = 1; btx.setLineDash([5, 4]);
         btx.beginPath(); btx.moveTo(A.left, sy(initLine)); btx.lineTo(W - A.right, sy(initLine)); btx.stroke();
         btx.setLineDash([]);
-        btx.fillStyle = '#9aa6ac'; btx.font = '10px Segoe UI, sans-serif'; btx.textAlign = 'left'; btx.textBaseline = 'bottom';
-        btx.fillText('初期投資 ' + fmt万円表示(initLine), A.left + 4, sy(initLine) - 2);
+        if (!compact) {
+          btx.fillStyle = '#9aa6ac'; btx.font = '10px Segoe UI, sans-serif'; btx.textAlign = 'left'; btx.textBaseline = 'bottom';
+          btx.fillText('初期投資 ' + fmt万円表示(initLine), A.left + 4, sy(initLine) - 2);
+        }
       }
 
       // 資産推移ライン
@@ -1801,9 +1823,11 @@
       // 終点マーカー＋ラベル
       const lx = sx(vals.length - 1), ly = sy(vals[vals.length - 1]);
       btx.fillStyle = '#2364aa'; btx.beginPath(); btx.arc(lx, ly, 5, 0, Math.PI * 2); btx.fill();
-      btx.fillStyle = '#2364aa'; btx.font = '700 12px Segoe UI, sans-serif';
-      btx.textAlign = 'right'; btx.textBaseline = 'bottom';
-      btx.fillText(fmt万円表示(vals[vals.length - 1]), lx - 8, ly - 4);
+      if (!compact) {
+        btx.fillStyle = '#2364aa'; btx.font = '700 12px Segoe UI, sans-serif';
+        btx.textAlign = 'right'; btx.textBaseline = 'bottom';
+        btx.fillText(fmt万円表示(vals[vals.length - 1]), lx - 8, ly - 4);
+      }
     }
 
     // ── ドローダウン（アンダーウォーター） ───────────────────────────────────
@@ -1838,7 +1862,8 @@
     function drawDdChart(dd) {
       if (!fitCanvas(ddCanvas)) return;
       const W = ddCanvas.width, H = ddCanvas.height;
-      const A = { left: 60, right: 24, top: 20, bottom: 36 };
+      const compact = W < 520;
+      const A = compact ? { left: 48, right: 14, top: 18, bottom: 34 } : { left: 60, right: 24, top: 20, bottom: 36 };
       dtx.clearRect(0, 0, W, H); dtx.fillStyle = '#ffffff'; dtx.fillRect(0, 0, W, H);
       if (!dd) return;
       const n = dd.dd.length;
@@ -1847,7 +1872,7 @@
       const sy = d => A.top + (d / yMin) * (H - A.top - A.bottom);  // d=0→top, d=yMin→bottom
 
       // グリッド＋Y軸（%）
-      dtx.font = '12px Segoe UI, sans-serif';
+      dtx.font = `${compact ? 10 : 12}px Segoe UI, sans-serif`;
       const step = yMin <= -0.6 ? 0.2 : 0.1;
       for (let g = 0; g >= yMin; g -= step) {
         const gy = sy(g);
@@ -1858,9 +1883,9 @@
       }
       // X軸（年）
       dtx.fillStyle = '#66737d'; dtx.textAlign = 'center'; dtx.textBaseline = 'top';
-      const seen = {};
-      dd.dates.forEach((d, i) => { const y = d.slice(0, 4); if (!(y in seen) && Number(y) % 2 === 0) { seen[y] = i; } });
-      Object.keys(seen).forEach(y => dtx.fillText(y, sx(seen[y]), H - A.bottom + 6));
+      chartYearTicks(dd.dates, compact).forEach(([year, index]) => {
+        dtx.fillText(year, sx(index), H - A.bottom + 6);
+      });
 
       // アンダーウォーター塗り（0→ddの赤いエリア）
       dtx.fillStyle = 'rgba(189,59,59,0.18)';
@@ -1880,8 +1905,10 @@
       if (mi >= 0) {
         const mx = sx(mi), my = sy(dd.maxDD);
         dtx.fillStyle = '#bd3b3b'; dtx.beginPath(); dtx.arc(mx, my, 4, 0, Math.PI * 2); dtx.fill();
-        dtx.font = '700 12px Segoe UI, sans-serif'; dtx.textAlign = 'center'; dtx.textBaseline = 'top';
-        dtx.fillText((dd.maxDD * 100).toFixed(0) + '%', mx, my + 6);
+        if (!compact) {
+          dtx.font = '700 12px Segoe UI, sans-serif'; dtx.textAlign = 'center'; dtx.textBaseline = 'top';
+          dtx.fillText((dd.maxDD * 100).toFixed(0) + '%', mx, my + 6);
+        }
       }
     }
 
@@ -1976,14 +2003,15 @@
       document.getElementById('mvoValue').textContent = state.mvoBtcRet + '%';
       if (!fitCanvas(mvoCanvas)) return;
       const W = mvoCanvas.width, H = mvoCanvas.height;
-      const A = { left: 56, right: 24, top: 20, bottom: 38 };
+      const compact = W < 520;
+      const A = compact ? { left: 48, right: 14, top: 18, bottom: 36 } : { left: 56, right: 24, top: 20, bottom: 38 };
       const xMax = 60;  // 仮定するBTC期待リターンの上限(%)
       vtx.clearRect(0, 0, W, H); vtx.fillStyle = '#ffffff'; vtx.fillRect(0, 0, W, H);
       const sx = xr => A.left + (xr / xMax) * (W - A.left - A.right);
       const sy = yw => H - A.bottom - (yw / 100) * (H - A.top - A.bottom);
 
       // グリッド＋軸
-      vtx.font = '12px Segoe UI, sans-serif';
+      vtx.font = `${compact ? 10 : 12}px Segoe UI, sans-serif`;
       for (let g = 0; g <= 100; g += 20) {
         const gy = sy(g);
         vtx.strokeStyle = '#eef0f2'; vtx.lineWidth = 1;
@@ -1992,9 +2020,10 @@
         vtx.fillText(g + '%', A.left - 8, gy);
       }
       vtx.textAlign = 'center'; vtx.textBaseline = 'top';
-      for (let xr = 0; xr <= xMax; xr += 10) vtx.fillText(xr + '%', sx(xr), H - A.bottom + 6);
-      vtx.fillStyle = '#35444b'; vtx.font = '700 11px Segoe UI, sans-serif';
-      vtx.fillText('BTC期待リターンの仮定 →', (A.left + W - A.right) / 2, H - 14);
+      const xTickStep = compact ? 20 : 10;
+      for (let xr = 0; xr <= xMax; xr += xTickStep) vtx.fillText(xr + '%', sx(xr), H - A.bottom + 6);
+      vtx.fillStyle = '#35444b'; vtx.font = `700 ${compact ? 10 : 11}px Segoe UI, sans-serif`;
+      vtx.fillText(compact ? 'BTC期待リターン' : 'BTC期待リターンの仮定 →', (A.left + W - A.right) / 2, H - (compact ? 12 : 14));
 
       // 最適BTC配分カーブ
       const pts = [];
@@ -2010,8 +2039,10 @@
         vtx.strokeStyle = '#8a8f94'; vtx.lineWidth = 1; vtx.setLineDash([4, 4]);
         vtx.beginPath(); vtx.moveTo(sx(waveRet), A.top); vtx.lineTo(sx(waveRet), H - A.bottom); vtx.stroke();
         vtx.setLineDash([]);
-        vtx.fillStyle = '#66737d'; vtx.font = '10px Segoe UI, sans-serif'; vtx.textAlign = 'left'; vtx.textBaseline = 'top';
-        vtx.fillText('波モデル ' + waveRet.toFixed(0) + '%', sx(waveRet) + 4, A.top + 2);
+        if (!compact) {
+          vtx.fillStyle = '#66737d'; vtx.font = '10px Segoe UI, sans-serif'; vtx.textAlign = 'left'; vtx.textBaseline = 'top';
+          vtx.fillText('波モデル ' + waveRet.toFixed(0) + '%', sx(waveRet) + 4, A.top + 2);
+        }
       }
 
       // 現在の仮定マーカー
